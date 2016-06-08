@@ -372,6 +372,7 @@ public class UserlifeService {
 			TopPointer tp = new TopPointer();
 			tp.setPointers(_pers);
 			tp.setScore(totalScore);
+			tp.setPcount(_pers.size());
 			toppts.add(tp);
 		}
 		analyse(toppts);

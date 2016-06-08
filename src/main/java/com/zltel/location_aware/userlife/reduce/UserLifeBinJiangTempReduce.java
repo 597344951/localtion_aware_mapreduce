@@ -125,7 +125,7 @@ public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> 
 		}
 		try {
 			if (!points.isEmpty()) {
-				String imsi = key.toString();
+				// String imsi = key.toString();
 				logout.info(key.toString() + "  输入点：" + points.size());
 				context.progress();
 			}

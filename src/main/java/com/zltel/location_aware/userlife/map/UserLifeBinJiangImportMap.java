@@ -44,7 +44,14 @@ public class UserLifeBinJiangImportMap extends Mapper<LongWritable, Text, Immuta
 		DateTimeUtil dtu = DateTimeUtil.getInstince();
 		week = String.valueOf(dtu.getWeekOfMonth());
 		week = "1";
-		month = String.valueOf(dtu.getMonth());
+		String SAVE_MONTH = context.getConfiguration().get("SAVE_MONTH");
+		if (StringUtil.isNotNullAndEmpty(SAVE_MONTH)) {
+			month = SAVE_MONTH;
+		} else {
+			dtu.setMonthOfNow(-1);// 前一个月
+			month = String.valueOf(dtu.getMonth());
+		}
+
 		table = new ImmutableBytesWritable();
 		Configuration _conf = context.getConfiguration();
 		table.set(Bytes.toBytes(_conf.get(TableOutputFormat.OUTPUT_TABLE)));

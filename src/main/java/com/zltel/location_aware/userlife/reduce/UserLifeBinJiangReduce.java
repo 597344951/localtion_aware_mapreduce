@@ -38,6 +38,8 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 
 	private String OUT_FILE_PATH = null;
 	String timerange = null;
+	/** 上一次合并后的大小 **/
+	private long lastcount = 0;
 
 	/*
 	 * (non-Javadoc)
@@ -76,8 +78,8 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 						String[] cs = line.split("\\|\\|");
 						String ci = cs[5];
 						String lac = cs[4];
-						String lat = cs[9];
-						String lng = cs[9];
+						String lng = cs[8];// 119.636602
+						String lat = cs[9]; // 30
 						String cell = cs[7];
 
 						Map<String, Object> _map = new HashMap<String, Object>();
@@ -134,6 +136,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 		TreeSet<Pointer> _points = new TreeSet<Pointer>(UserlifeService.getComparator());
 		boolean jump = false;
 		long jumpCount = 0;
+
 		for (Text value : iterator) {
 			try {
 				String json = value.toString();
@@ -200,6 +203,8 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	 *            当前点
 	 * @param points
 	 *            点 集合
+	 * @param lastcount
+	 *            上一次合并点数
 	 * @return 设置前一个点
 	 */
 	private void checkMerg(Pointer p, TreeSet<Pointer> points) {
@@ -207,7 +212,13 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 			return;
 		}
 		points.add(p);
-		UserlifeService.mergePointers(points);
+		// 队列达到最大值时 合并
+		int ps = points.size();
+		// 添加超过 X个点 或者 处于临界状态
+		if (ps - lastcount > 3000 || ps >= MAX_POINT_COUNT) {
+			UserlifeService.mergePointers(points);
+			lastcount = points.size();
+		}
 	}
 
 	public Pointer check(Pointer pointer) throws ClassNotFoundException, SQLException {

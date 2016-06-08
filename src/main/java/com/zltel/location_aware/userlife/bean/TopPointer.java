@@ -19,6 +19,10 @@ public class TopPointer {
 	private float _lat;
 	private float _lng;
 	/**
+	 * 聚合点个数
+	 */
+	private long pcount;
+	/**
 	 * 聚合的点
 	 */
 	private List<Pointer> pointers;
@@ -111,6 +115,21 @@ public class TopPointer {
 	 */
 	public final void setPointers(List<Pointer> pointers) {
 		this.pointers = pointers;
+	}
+
+	/**
+	 * @return the pcount
+	 */
+	public final long getPcount() {
+		return pcount;
+	}
+
+	/**
+	 * @param pcount
+	 *            the pcount to set
+	 */
+	public final void setPcount(long pcount) {
+		this.pcount = pcount;
 	}
 
 	/*
