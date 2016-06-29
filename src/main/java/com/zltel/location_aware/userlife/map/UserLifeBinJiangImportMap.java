@@ -2,7 +2,9 @@ package com.zltel.location_aware.userlife.map;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.client.Put;
@@ -20,6 +22,7 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.zltel.common.utils.string.StringUtil;
 import com.zltel.common.utils.time.DateTimeUtil;
+import com.zltel.location_aware.userlife.bean.CiCountInfo;
 import com.zltel.location_aware.userlife.bean.Pointer;
 import com.zltel.location_aware.userlife.bean.TopPointer;
 import com.zltel.location_aware.userlife.service.UserlifeService;
@@ -59,6 +62,9 @@ public class UserLifeBinJiangImportMap extends Mapper<LongWritable, Text, Immuta
 		if (StringUtil.isNotNullAndEmpty(savepoints)) {
 			savePoints = "0".equals(savepoints.trim()) ? false : true;
 		}
+
+		// logout.info("params: week=" + week + ",month=" + month +
+		// ",savePoints=" + savepoints);
 	}
 
 	/*
@@ -72,49 +78,105 @@ public class UserLifeBinJiangImportMap extends Mapper<LongWritable, Text, Immuta
 			Mapper<LongWritable, Text, ImmutableBytesWritable, Put>.Context context)
 			throws IOException, InterruptedException {
 		String[] strs = value.toString().trim().split("\t");
-		if (strs.length > 1) {
-			String[] ss = strs[0].split("_");
-			String imsi = ss[0];
-			String type = ss[1];
-			String content = strs[1];
-			JSONArray ja = JSON.parseArray(content);
-			List<TopPointer> tps = new ArrayList<TopPointer>();
-			context.progress();
-			for (int i = 0; i < ja.size() && i < 5; i++) {
-				JSONObject jo = ja.getJSONObject(i);
-				TopPointer tp = new TopPointer();
-				tp.setLat(jo.getString("lat"));
-				tp.setLng(jo.getString("lng"));
-				tp.setScore(jo.getLongValue("score"));
+		// logout.info("输入信息:" + value.toString());
+		try {
+			if (strs.length >= 2) {
+				String[] ss = strs[0].split("_");
+				String imsi = ss[0];
+				String type = ss[1];
+				String content = strs[1];
+				// logout.info("imsi:" + imsi + " , type:" + type);
+				// logout.info("正文:" + content);
+				JSONArray ja = JSON.parseArray(content);
+				List<TopPointer> tps = new ArrayList<TopPointer>();
+				// context.progress();
+				for (int i = 0; i < ja.size() && i < 5; i++) {
+					JSONObject jo = ja.getJSONObject(i);
+					TopPointer tp = new TopPointer();
+					String _lat = jo.getString("lat");
+					String _lng = jo.getString("lng");
+					if (StringUtil.isNullOrEmpty(_lat, _lng)) {
+						logout.warn("数据不全，跳过:" + jo.toJSONString());
+						continue;
+					}
+					tp.setLat(_lat);
+					tp.setLng(_lng);
+					tp.setScore(jo.getLongValue("score"));
 
-				if (savePoints) {
-					JSONArray _ja = jo.getJSONArray("pointers");
+					// pcount
+					tp.setPcount(jo.getLongValue("pcount"));
+					// totalCount
+					tp.setTotalCount(jo.getLongValue("totalCount"));
+					// distributionPoint
+					tp.setDistributionPoint(jo.getString("distributionPoint"));
+					// dayScoreRank
+					tp.setDayScoreRank(jo.getString("dayScoreRank"));
+					// dbc_time
+					tp.setDbc_time(jo.getLongValue("dbc_time"));
+					//
+					// imsi;
+					tp.setImsi(jo.getString("imsi"));
+					// imei;
+					tp.setImei(jo.getString("imei"));
+					// phone_model;
+					tp.setPhone_model(jo.getString("phone_model"));
+
+					if (savePoints) {
+						JSONArray _ja = jo.getJSONArray("pointers");
+						if (_ja != null) {
+							List<Pointer> pters = new ArrayList<Pointer>();
+							for (int _i = 0; _i < _ja.size(); _i++) {
+								Pointer pter = JSON.toJavaObject(_ja.getJSONObject(_i), Pointer.class);
+								pters.add(pter);
+							}
+							// context.progress();
+							if (pters.size() > UserlifeService.MAX_POINTER_COUNT) {
+								logout.info("点数超过了最大门限值,合并并截取最大的前 " + UserlifeService.MAX_POINTER_COUNT + " 个");
+								pters = UserlifeService.sortAndSubLength(pters);
+							}
+							tp.setPointers(pters);
+						}
+					}
+					// ciCountInfos;
+					JSONArray _ja = jo.getJSONArray("ciCountInfos");
 					if (_ja != null) {
-						List<Pointer> pters = new ArrayList<Pointer>();
+						List<CiCountInfo> ciCountInfos = new ArrayList<CiCountInfo>();
 						for (int _i = 0; _i < _ja.size(); _i++) {
-							Pointer pter = JSON.toJavaObject(_ja.getJSONObject(_i), Pointer.class);
-							pters.add(pter);
+							CiCountInfo pter = JSON.toJavaObject(_ja.getJSONObject(_i), CiCountInfo.class);
+							ciCountInfos.add(pter);
 						}
-						context.progress();
-						if (pters.size() > UserlifeService.MAX_POINTER_COUNT) {
-							logout.info("点数超过了最大门限值,合并并截取最大的前 " + UserlifeService.MAX_POINTER_COUNT + " 个");
-							pters = UserlifeService.sortAndSubLength(pters);
-						}
-						tp.setPointers(pters);
+						tp.setCiCountInfos(ciCountInfos);
+					}
+
+					tps.add(tp);
+					// context.progress();
+				}
+				List<Put> puts = UserlifeService.createPuts(imsi, tps, Integer.valueOf(type), week, month);
+				if (puts != null && !puts.isEmpty()) {
+					logout.info(imsi + " " + type + " Put 数:" + puts.size());
+					for (Put put : puts) {
+						context.write(table, put);
 					}
 				}
-				tps.add(tp);
-				context.progress();
-			}
-			List<Put> puts = UserlifeService.createPuts(imsi, tps, Integer.valueOf(type), week, month);
-			if (puts != null && !puts.isEmpty()) {
-				logout.info(imsi + " " + type + " Put 数:" + puts.size());
-				for (Put put : puts) {
-					context.write(table, put);
-				}
-			}
 
+			}
+		} catch (Exception e) {
+			logout.error(e.getMessage() + " " + context, e);
 		}
 	}
 
+	public static void main(String[] args) {
+		CiCountInfo cic = new CiCountInfo();
+		List<Map<String, Object>> appTop = new ArrayList<Map<String, Object>>();
+		Map<String, Object> map = new HashMap<String, Object>();
+		map.put("tag", "App");
+		map.put("value", 456);
+		appTop.add(map);
+		cic.setAppTop(appTop);
+
+		String json = JSON.toJSONString(cic);
+		System.out.println(json);
+		cic = JSON.toJavaObject(JSON.parseObject(json), CiCountInfo.class);
+		System.out.println(cic.getAppTop());
+	}
 }

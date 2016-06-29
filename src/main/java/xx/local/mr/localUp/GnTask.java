@@ -142,11 +142,13 @@ public class GnTask implements Runnable {
 							}
 						}
 						file.delete();
-						fs.close();
+						// fs.close();
 					}
 				}
 				if ("2".equals(isHdTask) || "3".equals(isHdTask)) {
+					System.out.println("start gn hbase");
 					Configuration conf = HBaseConfiguration.create();
+					System.out.println("get  hbase  Configuration");
 					conf.set("hbase.zookeeper.quorum", "nn1,view,dn1");
 					conf.set("hbase.zookeeper.property.clientPort", "2181");
 					conf.set("hbase.master", "nn1:60000");
@@ -154,7 +156,7 @@ public class GnTask implements Runnable {
 					String nd = dated.replaceAll("-", "");
 					String tabName = "hf_gnql_" + nd;
 					String mytable = "1," + tabName;
-					int redNum = 24;
+					int redNum = 50;
 					createTable(tabName, conf, h);
 					conf.set("mytable", mytable);
 					Job job = Job.getInstance(conf,
@@ -183,6 +185,7 @@ public class GnTask implements Runnable {
 			e.printStackTrace();
 		} finally {
 			MainJob.threadLeftOp("-");
+			System.out.println("GN OVER");
 		}
 	}
 

@@ -2,23 +2,48 @@ package com.zltel.location_aware.userlife.bean;
 
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
+import com.zltel.common.utils.conf.ConfigUtil;
 import com.zltel.common.utils.string.StringUtil;
 import com.zltel.common.utils.time.DateTimeUtil;
 import com.zltel.location_aware.userlife.service.UserlifeService;
 
 public class Pointer {
-	private static final long MAX_TIMERANGE = 1000 * 60 * 30;
+	private static final long MAX_TIMERANGE = 1000 * 60 * 60 * 2;
 	private static Date _baseDT = null;
 	public static final String SOURCE_GN = "gn";
 	public static final String SOURCE_CS = "cs";
 
+	public static double GN_PERCENT = 1.2;
+	public static double CS_PERCENT = 1;
+	/** 短信业务 **/
+	public static final String BUSSINESS_SMS = "sms";
+	/** 语音业务 **/
+	public static final String BUSSINESS_VOICE = "voice";
+	/** 定位业务 **/
+	public static final String BUSSINESS_LOCATION = "location";
+	/** 数据业务 **/
+	public static final String BUSSINESS_DATA = "data";
+
+	private static final Map<String, String> _map = ConfigUtil.resolveConfigProFile("userlife.properties");
+	static {
+		String _gnp = ConfigUtil.getConfigValue(_map, "GN.PERCENT", "1.2");
+		String _csp = ConfigUtil.getConfigValue(_map, "CS.PERCENT", "1");
+
+		GN_PERCENT = Double.valueOf(_gnp);
+		CS_PERCENT = Double.valueOf(_csp);
+	}
+	/** 业务类型 **/
+	private String business_type;
 	private String stime;
 	private String etime;
 	private String lac;
 	private String ci;
 	/** 来源 **/
 	private String source;
+	/** 网络类型： 2，3，4G **/
 	private String nettype;
 
 	private String cell;
@@ -44,6 +69,22 @@ public class Pointer {
 	private long score;
 
 	private String imsi;
+	private String imei;
+	/** 上传 字节数 **/
+	private String up_bytes;
+	/** 下载 字节数 **/
+	private String down_bytes;
+	/*** 使用APPID */
+	private String appid;
+	/** 使用url **/
+	private String url;
+	private String host;
+
+	// --------------------------------
+	/** 合并点的范围 **/
+	private List<String> timeRanges;
+	/** 聚合次数 **/
+	private int groupCount;
 
 	static {
 		try {
@@ -94,6 +135,11 @@ public class Pointer {
 	public long calcScore(int worth) {
 		if (0 == score) {
 			score = (long) (this.timeRange() * worth / 1000 * this.weight);
+			if (SOURCE_GN.equals(this.source)) {
+				this.score = (long) (this.score * GN_PERCENT);
+			} else if (SOURCE_CS.equals(this.source)) {
+				this.score = (long) (this.score * CS_PERCENT);
+			}
 		}
 		return score;
 	}
@@ -436,6 +482,141 @@ public class Pointer {
 	 */
 	public final void setImsi(String imsi) {
 		this.imsi = imsi;
+	}
+
+	/**
+	 * @return the timeRanges
+	 */
+	public final List<String> getTimeRanges() {
+		return timeRanges;
+	}
+
+	/**
+	 * @param timeRanges
+	 *            the timeRanges to set
+	 */
+	public final void setTimeRanges(List<String> timeRanges) {
+		this.timeRanges = timeRanges;
+	}
+
+	/**
+	 * @return the groupCount
+	 */
+	public final int getGroupCount() {
+		return groupCount;
+	}
+
+	/**
+	 * @param groupCount
+	 *            the groupCount to set
+	 */
+	public final void setGroupCount(int groupCount) {
+		this.groupCount = groupCount;
+	}
+
+	/**
+	 * @return the business_type
+	 */
+	public final String getBusiness_type() {
+		return business_type;
+	}
+
+	/**
+	 * @param business_type
+	 *            the business_type to set
+	 */
+	public final void setBusiness_type(String business_type) {
+		this.business_type = business_type;
+	}
+
+	/**
+	 * @return the imei
+	 */
+	public final String getImei() {
+		return imei;
+	}
+
+	/**
+	 * @param imei
+	 *            the imei to set
+	 */
+	public final void setImei(String imei) {
+		this.imei = imei;
+	}
+
+	/**
+	 * @return the up_bytes
+	 */
+	public final String getUp_bytes() {
+		return up_bytes;
+	}
+
+	/**
+	 * @return the down_bytes
+	 */
+	public final String getDown_bytes() {
+		return down_bytes;
+	}
+
+	/**
+	 * @param up_bytes
+	 *            the up_bytes to set
+	 */
+	public final void setUp_bytes(String up_bytes) {
+		this.up_bytes = up_bytes;
+	}
+
+	/**
+	 * @param down_bytes
+	 *            the down_bytes to set
+	 */
+	public final void setDown_bytes(String down_bytes) {
+		this.down_bytes = down_bytes;
+	}
+
+	/**
+	 * @return the appid
+	 */
+	public final String getAppid() {
+		return appid;
+	}
+
+	/**
+	 * @return the url
+	 */
+	public final String getUrl() {
+		return url;
+	}
+
+	/**
+	 * @param appid
+	 *            the appid to set
+	 */
+	public final void setAppid(String appid) {
+		this.appid = appid;
+	}
+
+	/**
+	 * @param url
+	 *            the url to set
+	 */
+	public final void setUrl(String url) {
+		this.url = url;
+	}
+
+	/**
+	 * @return the host
+	 */
+	public final String getHost() {
+		return host;
+	}
+
+	/**
+	 * @param host
+	 *            the host to set
+	 */
+	public final void setHost(String host) {
+		this.host = host;
 	}
 
 	/*

@@ -47,6 +47,7 @@ public class DataReduce extends
 			Reducer<Text, Text, ImmutableBytesWritable, Mutation>.Context context)
 			throws IOException, InterruptedException {
 		Configuration conf = context.getConfiguration();
+
 		String mytables = conf.get("mytable");
 		if (mytables.length() > 0) {
 			String[] tbs = mytables.split(",");
@@ -61,6 +62,16 @@ public class DataReduce extends
 			}
 
 		}
+		// Connection conn = ConnectionFactory.createConnection(conf);
+		// if (cstable.length() > 0) {
+		// TableName userTable = TableName.valueOf(cstable);
+		// Table cstb = conn.getTable(userTable);
+		// cstb.setWriteBufferSize(6 * 1024 * 1024);
+		// } else {
+		// TableName userTable = TableName.valueOf(gntable);
+		// Table gntb = conn.getTable(userTable);
+		// gntb.setWriteBufferSize(6 * 1024 * 1024);
+		// }
 
 	}
 

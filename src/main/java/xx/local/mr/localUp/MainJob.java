@@ -9,8 +9,6 @@
 
 package xx.local.mr.localUp;
 
-import java.util.Timer;
-
 /**
  * ClassName:MainJob <br/>
  * Function: TODO ADD FUNCTION. <br/>
@@ -23,39 +21,41 @@ import java.util.Timer;
  * @see
  */
 public class MainJob {
-  private static Integer threadLeft = 0;// 线程剩余数量
+	private static Integer threadLeft = 0;// 线程剩余数量
 
-  public static Integer getThreadLeft() {
-    return threadLeft;
-  }
+	public static Integer getThreadLeft() {
+		return threadLeft;
+	}
 
-  public static void setThreadLeft(Integer threadLeft) {
-    MainJob.threadLeft = threadLeft;
-  }
+	public static void setThreadLeft(Integer threadLeft) {
+		MainJob.threadLeft = threadLeft;
+	}
 
-  public static synchronized void threadLeftOp(String op) {
-    if ("+".equals(op)) {
-      threadLeft++;
-    } else if ("-".equals(op)) {
-      threadLeft--;
-    }
-  }
+	public static synchronized void threadLeftOp(String op) {
+		if ("+".equals(op)) {
+			threadLeft++;
+		} else if ("-".equals(op)) {
+			threadLeft--;
+		}
+	}
 
-  public static void main(String[] args) {
+	public static void main(String[] args) {
 
-    String type = "";
-    if (args.length > 2) {
-      type = args[0];
-    }
-    if ("1".equals(type) || "3".equals(type)) {
-      DataCollection dataColl = new DataCollection(args);
-      Thread dataCollThred = new Thread(dataColl);
-      dataCollThred.start();
-    }
-    if ("2".equals(type) || "3".equals(type)) {
-      Timer timer = new Timer();
-      timer.schedule(new JobTask(args), 1000, 60 * 60000);
-    }
+		String type = "";
+		if (args.length > 2) {
+			type = args[0];
+		}
+		if ("1".equals(type) || "3".equals(type)) {
+			DataCollection dataColl = new DataCollection(args);
+			Thread dataCollThred = new Thread(dataColl);
+			dataCollThred.start();
+		}
+		if ("2".equals(type) || "3".equals(type)) {
+			JobTask job = new JobTask(args);
+			job.run();
+			// Timer timer = new Timer();
+			// timer.schedule(new JobTask(args), 1000, 60 * 60000);
+		}
 
-  }
+	}
 }

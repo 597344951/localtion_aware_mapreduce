@@ -140,11 +140,12 @@ public class CsTask implements Runnable {
 
 						}
 						file.delete();
-						fs.close();
+						// fs.close();
 
 					}
 				}
 				if ("2".equals(isHdTask) || "3".equals(isHdTask)) {
+					System.out.print("start cs hbase");
 					Configuration conf = HBaseConfiguration.create();
 					conf.set("hbase.zookeeper.quorum", "nn1,view,dn1");
 					conf.set("hbase.zookeeper.property.clientPort", "2181");
@@ -179,6 +180,7 @@ public class CsTask implements Runnable {
 			e.printStackTrace();
 		} finally {
 			MainJob.threadLeftOp("-");
+			System.out.println("CS OVER");
 		}
 	}
 

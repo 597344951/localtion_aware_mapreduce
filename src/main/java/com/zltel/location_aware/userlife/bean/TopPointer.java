@@ -18,14 +18,30 @@ public class TopPointer {
 
 	private float _lat;
 	private float _lng;
-	/**
-	 * 聚合点个数
-	 */
+	/*** 聚合点个数 */
 	private long pcount;
-	/**
-	 * 聚合的点
-	 */
+	/** 总统计点数 **/
+	private long totalCount;
+	/*** 聚合的点 */
 	private List<Pointer> pointers;
+
+	/** 点分布范围 [{tag:,count:,percent:}] **/
+	private String distributionPoint;
+	/** 每天分数分布 **/
+	private String dayScoreRank;
+
+	// -----DEBUG INFO-----
+	/** DBSCAN 算法耗时 **/
+	private long dbc_time;
+
+	// ----------2016.6.28------------
+	/** 相关小区聚合信息 **/
+	private List<CiCountInfo> ciCountInfos;
+	private String imsi;
+	private String imei;
+	private String phone_model;
+
+	// -------------------------------------------------------------------------------------
 
 	/**
 	 * @return the score
@@ -83,6 +99,7 @@ public class TopPointer {
 	 */
 	public final void setLat(String lat) {
 		this.lat = lat;
+		this._lat = Float.valueOf(lat);
 	}
 
 	/**
@@ -91,6 +108,7 @@ public class TopPointer {
 	 */
 	public final void setLng(String lng) {
 		this.lng = lng;
+		this._lng = Float.valueOf(lng);
 	}
 
 	/**
@@ -130,6 +148,126 @@ public class TopPointer {
 	 */
 	public final void setPcount(long pcount) {
 		this.pcount = pcount;
+	}
+
+	/**
+	 * @return the totalCount
+	 */
+	public final long getTotalCount() {
+		return totalCount;
+	}
+
+	/**
+	 * @param totalCount
+	 *            the totalCount to set
+	 */
+	public final void setTotalCount(long totalCount) {
+		this.totalCount = totalCount;
+	}
+
+	/**
+	 * @return the distributionPoint
+	 */
+	public final String getDistributionPoint() {
+		return distributionPoint;
+	}
+
+	/**
+	 * @param distributionPoint
+	 *            the distributionPoint to set
+	 */
+	public final void setDistributionPoint(String distributionPoint) {
+		this.distributionPoint = distributionPoint;
+	}
+
+	/**
+	 * @return the dbc_time
+	 */
+	public final long getDbc_time() {
+		return dbc_time;
+	}
+
+	/**
+	 * @param dbc_time
+	 *            the dbc_time to set
+	 */
+	public final void setDbc_time(long dbc_time) {
+		this.dbc_time = dbc_time;
+	}
+
+	/**
+	 * @return the dayScoreRank
+	 */
+	public final String getDayScoreRank() {
+		return dayScoreRank;
+	}
+
+	/**
+	 * @param dayScoreRank
+	 *            the dayScoreRank to set
+	 */
+	public final void setDayScoreRank(String dayScoreRank) {
+		this.dayScoreRank = dayScoreRank;
+	}
+
+	/**
+	 * @return the imsi
+	 */
+	public final String getImsi() {
+		return imsi;
+	}
+
+	/**
+	 * @return the imei
+	 */
+	public final String getImei() {
+		return imei;
+	}
+
+	/**
+	 * @return the phone_model
+	 */
+	public final String getPhone_model() {
+		return phone_model;
+	}
+
+	/**
+	 * @return the ciCountInfos
+	 */
+	public final List<CiCountInfo> getCiCountInfos() {
+		return ciCountInfos;
+	}
+
+	/**
+	 * @param ciCountInfos
+	 *            the ciCountInfos to set
+	 */
+	public final void setCiCountInfos(List<CiCountInfo> ciCountInfos) {
+		this.ciCountInfos = ciCountInfos;
+	}
+
+	/**
+	 * @param imsi
+	 *            the imsi to set
+	 */
+	public final void setImsi(String imsi) {
+		this.imsi = imsi;
+	}
+
+	/**
+	 * @param imei
+	 *            the imei to set
+	 */
+	public final void setImei(String imei) {
+		this.imei = imei;
+	}
+
+	/**
+	 * @param phone_model
+	 *            the phone_model to set
+	 */
+	public final void setPhone_model(String phone_model) {
+		this.phone_model = phone_model;
 	}
 
 	/*

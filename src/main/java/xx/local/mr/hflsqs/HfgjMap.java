@@ -1,59 +1,34 @@
-package xx.local.mr.zy;
+package xx.local.mr.hflsqs;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 public class HfgjMap extends Mapper<LongWritable, Text, Text, Text> {
-	// private Map<String, String> xzqci = new HashMap<String, String>();
+
 	private Map<String, String> fgsciMAP = new HashMap<String, String>();
 
 	public enum Counters {
 		LINES
 	}
 
-	// private Map<String, String> userMap = new HashMap<String, String>();
-
 	@Override
 	protected void setup(Mapper<LongWritable, Text, Text, Text>.Context context)
 			throws IOException, InterruptedException {
-		Configuration conf = null;
-		FileSystem fs = null;
 		try {
-			conf = new Configuration();
-			fs = FileSystem.get(conf);
-			BufferedReader brt = new BufferedReader(new InputStreamReader(
-					fs.open(new Path("/user/zltel/hfqs/conf/xzqfgsci.txt")),
-					"UTF-8"));
-			String line = null;
-			while ((line = brt.readLine()) != null) {
-				if (line != null && line.length() > 0) {
-					String[] strs = line.trim().split(",");
-					if (strs.length == 4) {
-						// String xzqbh = strs[1].trim();
-						String fgsbh = strs[1].trim();
-						String ci = strs[3].trim();
-						if (fgsbh.matches("\\d+")) {
-							if ("2".equals(fgsbh)) {
-								fgsciMAP.put(ci, fgsbh);
-							}
-						}
-						// if (fgsciMAP.size() > 500) {
-						//
-						// }
-					}
-				}
-			}
-			brt.close();
+			fgsciMAP.put("10000", "10000");
+			fgsciMAP.put("10010", "10010");
+			fgsciMAP.put("95079", "95079");
+			fgsciMAP.put("96171", "96171");
+			fgsciMAP.put("0571-10000", "0571-10000");
+			fgsciMAP.put("0571-10010", "0571-10010");
+			fgsciMAP.put("0571-95079", "0571-95079");
+			fgsciMAP.put("0571-96171", "0571-96171");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -63,69 +38,19 @@ public class HfgjMap extends Mapper<LongWritable, Text, Text, Text> {
 	protected void map(LongWritable key, Text value,
 			Mapper<LongWritable, Text, Text, Text>.Context context)
 			throws IOException, InterruptedException {
-		String twci = null;
-		String trci = null;
-		String fci = null;
-		String cnum = null;
+		String[] strs = value.toString().trim().split("\\t");
 		String[] colum = null;
-		String line = value.toString();
-		String[] tmp = line.split("\\t");
-		String lastci = null;
-		String type = null;
-		String rat = null;
-		String imsi = null;
+		colum = strs[1].trim().split(",");
+		if (colum.length > 15) {
+			String cnum = colum[2];
+			String cdnum = colum[3];
+			String st = colum[6];
+			if (fgsciMAP.get(cnum) != null || fgsciMAP.get(cdnum) != null) {
+				context.write(new Text(cnum + "_" + cdnum), new Text(st));
 
-		colum = (tmp[1].trim() + "1").split("\\|");
-		try {
-
-			cnum = colum[2];
-			imsi = colum[4];
-			rat = colum[7];
-			if (cnum.startsWith("86")) {
-				cnum = cnum.substring(2, cnum.length());
 			}
-
-			if (cnum.startsWith("1")) {
-			} else {
-				if (imsi != null && !imsi.startsWith("460")) {
-
-				} else {
-					return;
-				}
-			}
-
-			twci = Long.parseLong("".equals(colum[11]) ? "0" : colum[11], 16)
-					+ "";
-			trci = Long.parseLong("".equals(colum[12]) ? "0" : colum[12], 16)
-					+ "";
-
-			String ffci = colum[colum.length - 2];
-			if (ffci != null && ffci.length() > 2) {
-				fci = Long.parseLong(ffci, 16) + "";
-			}
-			if ("6".equals(rat)) {
-				lastci = fci;
-				type = "4";
-			} else if ("2".equals(rat)) {
-				lastci = twci;
-				type = "2";
-			} else if ("1".equals(rat)) {
-				lastci = trci;
-				type = "3";
-			}
-
-			if (fgsciMAP.get(lastci) != null) {
-				context.getCounter(Counters.LINES).increment(1);
-				String rkey = cnum + "_" + type;
-
-				context.write(new Text(rkey), new Text(cnum + "," + imsi + ","
-						+ type + "," + lastci));
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-
 		}
+
 	}
 
 }

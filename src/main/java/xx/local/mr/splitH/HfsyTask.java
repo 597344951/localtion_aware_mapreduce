@@ -82,7 +82,7 @@ public class HfsyTask implements Runnable {
 					+ dated.replaceAll("-", "") + "/"
 					+ String.format("%02d", h);
 			if ("1".equals(isFtpWk) || "3".equals(isFtpWk)) {
-				log.info("sy job start");
+				System.out.println("sy job start");
 				Configuration conf = new Configuration();
 				// conf.setJobName("hfSyData");
 				conf.set("mapred.max.map.failures.percent", "100");
@@ -101,33 +101,47 @@ public class HfsyTask implements Runnable {
 				FileOutputFormat.setCompressOutput(job, true);
 				FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class);
 				if (gnPath != null && gnPath.length() > 0) {
-					log.info("inputPath:" + gnPath);
-					FileInputFormat.addInputPath(job, new Path(gnPath));
+					System.out.println("inputPath:" + gnPath);
+					FileSystem fs = FileSystem.get(conf);
+					Path gnp = new Path(gnPath);
+					if (fs.exists(gnp)) {
+						FileStatus[] stats = fs.listStatus(gnp);
+						if (stats.length > 0) {
+							FileInputFormat.addInputPath(job, gnp);
+						}
+					}
 				}
 				if (csPath != null && csPath.length() > 0) {
-					log.info("inputPath:" + csPath);
-					FileInputFormat.addInputPath(job, new Path(csPath));
+					System.out.println("inputPath:" + csPath);
+					FileSystem fs = FileSystem.get(conf);
+					Path csp = new Path(csPath);
+					if (fs.exists(csp)) {
+						FileStatus[] stats = fs.listStatus(csp);
+						if (stats.length > 0) {
+							FileInputFormat.addInputPath(job, csp);
+						}
+					}
 				}
 				if (gnPath == null && csPath == null) {
 					return;
 				}
-				log.info("OutputPath:" + hfsyPath);
+				System.out.println("OutputPath:" + hfsyPath);
 				// Configuration conf = new Configuration();
 				FileSystem fs = FileSystem.get(conf);
 				if (fs.exists(new Path(hfsyPath))) {
 					if (fs.delete(new Path(hfsyPath), true)) {
-						log.info("delete  old path  successful  ：" + hfsyPath);
+						System.out.println("delete  old path  successful  ：" + hfsyPath);
 					} else {
-						log.info("delete  old path  err ：" + hfsyPath);
+						System.out.println("delete  old path  err ：" + hfsyPath);
 					}
 				}
 
 				FileOutputFormat.setOutputPath(job, new Path(hfsyPath));
 				job.waitForCompletion(true);
-				log.info("sy job end");
+				System.out.println("sy job end");
 			}
 			if ("2".equals(isFtpWk) || "3".equals(isFtpWk)) {
-				log.info("sy ftp job start");
+				System.out.println("sy ftp job start");
 				Path path = new Path(hfsyPath);
 				Configuration conf = new Configuration();
 				FileSystem fs = FileSystem.get(conf);
@@ -145,8 +159,8 @@ public class HfsyTask implements Runnable {
 							FSDataInputStream fin = fs
 									.open(new Path(localPath));
 							FtpUtil ftp = new FtpUtil();
-							log.info("local path:" + remt);
-							log.info("remot Path" + rp);
+							System.out.println("local path:" + remt);
+							System.out.println("remot Path" + rp);
 							ftp.uploadFile(remt, fin, rePath, rp);
 							ftp.rename(rem, remt, rp);
 							fin.close();
@@ -160,8 +174,8 @@ public class HfsyTask implements Runnable {
 						+ "sy.txt";
 				ftp.uploadFile(msg, new ByteArrayInputStream("1".getBytes()),
 						null, "msg/");
-				log.info("sed msg：" + msg);
-				fs.close();
+				System.out.println("sed msg：" + msg);
+//				fs.close();
 			}
 		} catch (Exception e) {
 			log.error(e.getMessage());
@@ -170,7 +184,6 @@ public class HfsyTask implements Runnable {
 			MainJob.threadLeftOp("-");
 		}
 	}
-
 	// public static void main(String[] args) throws Exception {
 	// String startDate = null;
 	// String endDate = null;

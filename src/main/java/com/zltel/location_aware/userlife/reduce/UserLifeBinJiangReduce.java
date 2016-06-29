@@ -35,6 +35,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	private static Logger logout = LoggerFactory.getLogger(UserLifeBinJiangReduce.class);
 
 	public static Map<String, Map<String, Object>> _cacheMap = null;
+	public static Map<String, Map<String, Object>> _imeiMap = null;
 
 	private String OUT_FILE_PATH = null;
 	String timerange = null;
@@ -50,11 +51,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	 */
 	@Override
 	protected void setup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
-		timerange = context.getConfiguration().get("timerange");
 		String keep_points = context.getConfiguration().get("KEEP_POINTS");
-		if (StringUtil.isNotNullAndEmpty(timerange) && StringUtil.isNum(timerange)) {
-			UserlifeService.TIMERANGE = Integer.valueOf(timerange);
-		}
 		if (StringUtil.isNotNullAndEmpty(keep_points)) {
 			UserlifeService.KEEP_POINTS = "0".equals(keep_points.trim()) ? false : true;
 		}
@@ -76,6 +73,11 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 					logout.info("读取 到gis 行数: " + lines.length);
 					for (String line : lines) {
 						String[] cs = line.split("\\|\\|");
+						String Province = cs[0];
+						String city = cs[1];
+						String community = cs[2];
+						String community_type = cs[3];
+
 						String ci = cs[5];
 						String lac = cs[4];
 						String lng = cs[8];// 119.636602
@@ -88,6 +90,11 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 						_map.put("LAT", lat);
 						_map.put("LNG", lng);
 						_map.put("LAC", lac);
+
+						_map.put("PROVINCE", Province);
+						_map.put("CITY", city);
+						_map.put("COMMUNITY", community);
+						_map.put("COMMUNITY_TYPE", community_type);
 						_cacheMap.put(ci, _map);
 						// logout.info(" 读取到的数据: " + _map);
 					}
@@ -96,6 +103,42 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 				IOUtils.closeStream(in);
 			}
 		}
+		if (_imeiMap == null) {
+			_imeiMap = new HashMap<String, Map<String, Object>>();
+			// 读取 gis 数据
+			FileSystem fs = FileSystem.get(context.getConfiguration());
+			FSDataInputStream in = null;
+			try {
+				// 输出全部文件内容
+				in = fs.open(new Path(UserLifeBinJiangMain.IMEI_PATH));
+				// 用Hadoop的IOUtils工具方法来让这个文件的指定字节复制到标准输出流上
+				ByteArrayOutputStream bo = new ByteArrayOutputStream();
+				IOUtils.copyBytes(in, bo, 50, false);
+				String txt = new String(bo.toByteArray(), "UTF-8");
+				if (StringUtil.isNotNullAndEmpty(txt)) {
+					String[] lines = txt.split("\r\n");
+					for (String line : lines) {
+						String[] cs = line.split("\\|\\|");
+						if (cs.length < 3) {
+							continue;
+						}
+						String imsi = cs[0];
+						String tel_fac = cs[1];
+						String tel_type = cs[2];
+
+						Map<String, Object> _map = new HashMap<String, Object>();
+						_map.put("imsi", imsi);
+						_map.put("tel_fac", tel_fac);
+						_map.put("tel_type", tel_type);
+
+						_imeiMap.put(imsi, _map);
+					}
+				}
+			} finally {
+				IOUtils.closeStream(in);
+			}
+		}
+
 		OUT_FILE_PATH = context.getConfiguration().get("result_out_path");
 		OUT_FILE_PATH = OUT_FILE_PATH + "jobLog.txt";
 
@@ -136,7 +179,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 		TreeSet<Pointer> _points = new TreeSet<Pointer>(UserlifeService.getComparator());
 		boolean jump = false;
 		long jumpCount = 0;
-
+		long totalCount = 0;
 		for (Text value : iterator) {
 			try {
 				String json = value.toString();
@@ -148,6 +191,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 				}
 				p = check(p);
 				if (p != null) {
+					totalCount++;
 					if (!jump && MAX_POINT_COUNT != -1 && _points.size() > MAX_POINT_COUNT) {
 						jump = true;
 					}
@@ -173,24 +217,25 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 				String imsi = key.toString();
 				List<Pointer> points = new ArrayList<Pointer>(_points);
 				List<Pointer> pts = UserlifeService.prepareInit(points);
+				totalCount = pts.size();// 更改为合并后的点数目
 				logout.info(imsi + "  聚合+过滤后的点：" + pts.size());
 				String _k = imsi + "_" + UserlifeService.TYPE_HOME;
-				List<TopPointer> home_tps = UserlifeService.analyseHome(pts);
+				List<TopPointer> home_tps = UserlifeService.analyseHome(pts, totalCount);
 				context.write(new Text(_k), new Text(JSON.toJSONString(home_tps)));
 				context.progress();
 				_k = imsi + "_" + UserlifeService.TYPE_WORK;
-				List<TopPointer> work_tps = UserlifeService.analyseWork(pts);
+				List<TopPointer> work_tps = UserlifeService.analyseWork(pts, totalCount);
 				context.write(new Text(_k), new Text(JSON.toJSONString(work_tps)));
 				context.progress();
 				_k = imsi + "_" + UserlifeService.TYPE_FUN;
-				List<TopPointer> fun_tps = UserlifeService.analyseFun(pts);
+				List<TopPointer> fun_tps = UserlifeService.analyseFun(pts, totalCount);
 				context.write(new Text(_k), new Text(JSON.toJSONString(fun_tps)));
 				context.progress();
 			}
 
 		} catch (Exception e) {
 			logout.error("reduce error: " + e.getMessage(), e);
-			// throw new IOException(e);
+			throw new IOException(e);
 		}
 	}
 

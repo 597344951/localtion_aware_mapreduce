@@ -13,8 +13,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 
-import org.mortbay.log.Log;
-
 /**
  * ClassName:GnCollection <br/>
  * Function: TODO ADD FUNCTION. <br/>
@@ -43,11 +41,15 @@ public class DataCollection implements Runnable {
 			String endDate = null;
 			String jobtype = null;
 			String isHdTask = null;
+			// String isday = null;
 			if (args.length > 4) {
 				isHdTask = args[1];
 				jobtype = args[2];
 				startDate = args[3];
 				endDate = args[4];
+				// if (args.length > 5) {
+				// isday = args[5];
+				// }
 			} else {
 				return;
 			}
@@ -92,18 +94,23 @@ public class DataCollection implements Runnable {
 					Thread syThred = new Thread(sy);
 					syThred.start();
 				}
-
-				for (int i = 0; i < 600; i++) {
+				// if ("5".equals(jobtype) || "3".equals(jobtype)) {
+				// MainJob.threadLeftOp("+");
+				// RlTasek rl = new RlTasek(dated, h, isHdTask);
+				// Thread rlThred = new Thread(rl);
+				// rlThred.start();
+				// }
+				for (int i = 0; i < 60; i++) {
 					if (MainJob.getThreadLeft() == 0) {
-						Log.info("job all over");
+						System.out.println("job all over");
 						break;
 					} else {
 						Thread.sleep(60 * 1000);
 					}
-					if (i % 60 == 0) {
-						System.out.println("ALL_" + dated.replaceAll("-", "")
-								+ "_" + h + "一个小时");
-					}
+				}
+				if (MainJob.getThreadLeft() != 0) {
+					System.out.println("ALL_" + dated.replaceAll("-", "") + "_"
+							+ h + "超时跳出");
 				}
 
 			}

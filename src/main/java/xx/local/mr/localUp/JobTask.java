@@ -9,7 +9,6 @@
 
 package xx.local.mr.localUp;
 
-import java.util.TimerTask;
 
 /**
  * ClassName:JobTask <br/>
@@ -22,7 +21,7 @@ import java.util.TimerTask;
  * @since JDK 1.7
  * @see
  */
-public class JobTask extends TimerTask {
+public class JobTask {
 	String[] args = null;
 
 	public String[] getArgs() {
@@ -40,9 +39,8 @@ public class JobTask extends TimerTask {
 		this.args = args;
 	}
 
-	@Override
 	public void run() {
-		Thread athread = new Thread(new JobTask(args));
+		Thread athread = new Thread(new JobThread(args));
 		athread.start();
 	}
 

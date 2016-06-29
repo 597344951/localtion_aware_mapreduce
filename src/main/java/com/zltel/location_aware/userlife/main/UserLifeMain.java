@@ -32,7 +32,6 @@ import com.zltel.common.utils.hbase.HBaseUtil;
 import com.zltel.common.utils.string.StringUtil;
 import com.zltel.location_aware.userlife.map.UserLifeMap;
 import com.zltel.location_aware.userlife.reduce.UserLifeReduce;
-import com.zltel.location_aware.userlife.service.UserlifeService;
 
 /**
  * 用户 标签识别 主入口
@@ -101,7 +100,7 @@ public class UserLifeMain {
 				String s = args[2];
 				if (StringUtil.isNum(s)) {
 					logout.info("init Param: 更改 时长 门限值= " + s);
-					UserlifeService.TIMERANGE = Integer.valueOf(s);
+					// UserlifeService.TIMERANGE = Integer.valueOf(s);
 				}
 			}
 			if (args.length >= 4) {
@@ -144,7 +143,7 @@ public class UserLifeMain {
 
 			conf.set("conf.columnfamily", columnFamily);
 			conf.set("writeTable", writeTable);
-			conf.set("timerange", "" + UserlifeService.TIMERANGE);
+			// conf.set("timerange", "" + UserlifeService.TIMERANGE);
 
 			Job job = Job.getInstance(conf, "userlife tags");
 			job.setJarByClass(UserLifeMain.class);

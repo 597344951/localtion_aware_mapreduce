@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeSet;
 
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -30,10 +31,15 @@ import com.zltel.location_aware.userlife.service.UserlifeService;
  *
  */
 public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> {
+	/**
+	 * 最大 多少个点
+	 */
+	public static int MAX_POINT_COUNT = 50000;
 	private static Logger logout = LoggerFactory.getLogger(UserLifeBinJiangTempReduce.class);
 
 	public static Map<String, Map<String, Object>> _cacheMap = null;
-
+	/** 上一次合并后的大小 **/
+	private long lastcount = 0;
 	String timerange = null;
 
 	/*
@@ -48,7 +54,7 @@ public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> 
 		timerange = context.getConfiguration().get("timerange");
 
 		if (StringUtil.isNotNullAndEmpty(timerange) && StringUtil.isNum(timerange)) {
-			UserlifeService.TIMERANGE = Integer.valueOf(timerange);
+			// UserlifeService.TIMERANGE = Integer.valueOf(timerange);
 		}
 
 		if (_cacheMap == null) {
@@ -70,8 +76,8 @@ public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> 
 						String[] cs = line.split("\\|\\|");
 						String ci = cs[5];
 						String lac = cs[4];
-						String lat = cs[9];
-						String lng = cs[9];
+						String lng = cs[8];// 119.636602
+						String lat = cs[9]; // 30
 						String cell = cs[7];
 
 						Map<String, Object> _map = new HashMap<String, Object>();
@@ -102,37 +108,81 @@ public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> 
 		logout.info("start reduce----------------------------------");
 
 		String _imsi = key.toString();
-		List<Pointer> points = new ArrayList<Pointer>();
+		// List<Pointer> points = new ArrayList<Pointer>();
+		TreeSet<Pointer> _points = new TreeSet<Pointer>(UserlifeService.getComparator());
+		boolean jump = false;
+		long jumpCount = 0;
+		long totalCount = 0;
 		for (Text value : iterator) {
 			try {
-				context.progress();
 				String json = value.toString();
 				Pointer p = JSON.toJavaObject(JSON.parseObject(json), Pointer.class);
+				context.progress();
 				if (!p.avaliable()) {
 					logout.info(_imsi + ",跳过不合法数据:" + json);
 					continue;
 				}
 				p = check(p);
 				if (p != null) {
-					points.add(p);
-					// logout.info("转换后的数据:" + JSON.toJSONString(p));
+					totalCount++;
+					if (!jump && MAX_POINT_COUNT != -1 && _points.size() > MAX_POINT_COUNT) {
+						jump = true;
+					}
+					if (!jump) {
+						checkMerg(p, _points);
+						// logout.info("转换后的数据:" + JSON.toJSONString(p));
+					} else {
+						jumpCount++;
+					}
 				} else {
-					logout.warn("没有识别到数据! " + json);
+					logout.info("没有识别到数据! " + json);
 				}
 			} catch (Exception e) {
 				logout.error(e.getMessage(), e);
 			}
 		}
 		try {
-			if (!points.isEmpty()) {
-				// String imsi = key.toString();
-				logout.info(key.toString() + "  输入点：" + points.size());
-				context.progress();
+			if (!_points.isEmpty()) {
+				List<Pointer> points = new ArrayList<Pointer>(_points);
+				List<Pointer> pts = UserlifeService.prepareInit(points);
+				for (Pointer _p : pts) {
+					// 计算分数
+					long score = _p.calcScore(UserlifeService.WORTH);
+					_p.setScore(score);
+					_p.setTime(_p.timeRange());
+					context.write(key, new Text(JSON.toJSONString(_p)));
+				}
 			}
-
 		} catch (Exception e) {
 			logout.error("reduce error: " + e.getMessage(), e);
 			// throw new IOException(e);
+		}
+	}
+
+	/**
+	 * 判断点是否 可以合并,如果可以 则合并,不可以则保存
+	 * 
+	 * @param bfPointer
+	 *            前一个点
+	 * @param p
+	 *            当前点
+	 * @param points
+	 *            点 集合
+	 * @param lastcount
+	 *            上一次合并点数
+	 * @return 设置前一个点
+	 */
+	private void checkMerg(Pointer p, TreeSet<Pointer> points) {
+		if (p == null) {
+			return;
+		}
+		points.add(p);
+		// 队列达到最大值时 合并
+		int ps = points.size();
+		// 添加超过 X个点 或者 处于临界状态
+		if (ps - lastcount > 6000 || ps >= MAX_POINT_COUNT) {
+			UserlifeService.mergePointers(points);
+			lastcount = points.size();
 		}
 	}
 

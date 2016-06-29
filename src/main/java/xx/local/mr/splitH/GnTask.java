@@ -112,7 +112,7 @@ public class GnTask implements Runnable {
 				job.setOutputValueClass(Text.class);
 				job.setJarByClass(GnTask.class);
 				job.setInputFormatClass(SequenceFileInputFormat.class);
-				job.setNumReduceTasks(6);
+				job.setNumReduceTasks(12);
 				FileOutputFormat.setCompressOutput(job, true);
 				FileOutputFormat.setOutputCompressorClass(job, GzipCodec.class);
 				FileInputFormat.addInputPath(job, new Path(gnPath));
@@ -166,7 +166,7 @@ public class GnTask implements Runnable {
 				ftp.uploadFile(msg, new ByteArrayInputStream("1".getBytes()),
 						null, msgPath + "/");
 				log.info("sed msg：" + msg);
-				fs.close();
+//				fs.close();
 			}
 			if ("4".equals(isFtpWk)) {
 				FtpUtil ftp = new FtpUtil();
@@ -187,6 +187,7 @@ public class GnTask implements Runnable {
 			e.printStackTrace();
 		} finally {
 			MainJob.threadLeftOp("-");
+			System.out.println("gn over");
 		}
 	}
 }

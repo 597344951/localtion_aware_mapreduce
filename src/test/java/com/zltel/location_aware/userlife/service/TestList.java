@@ -5,7 +5,6 @@ import java.util.List;
 
 import org.junit.Test;
 
-import com.alibaba.fastjson.JSON;
 import com.zltel.location_aware.userlife.bean.Pointer;
 
 public class TestList {
@@ -17,6 +16,6 @@ public class TestList {
 		System.out.println(list.subList(0, 0));
 
 		Pointer pter = new Pointer();
-		System.out.println(JSON.toJSONString(pter));
+		// System.out.println(JSON.toJSONString(pter));
 	}
 }

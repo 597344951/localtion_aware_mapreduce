@@ -163,7 +163,7 @@ public class SyTask implements Runnable {
 						}
 
 						file.delete();
-						fs.close();
+						// fs.close();
 
 					}
 				}
@@ -201,6 +201,7 @@ public class SyTask implements Runnable {
 			e.printStackTrace();
 		} finally {
 			MainJob.threadLeftOp("-");
+			System.out.println("SY OVER");
 		}
 	}
 	// }

@@ -17,6 +17,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.zltel.common.main.SuperMRJob;
 import com.zltel.common.utils.date.DateUtil;
 import com.zltel.common.utils.string.StringUtil;
 import com.zltel.location_aware.userlife.map.UserLifeBinJiangMap;
@@ -29,7 +30,7 @@ import com.zltel.location_aware.userlife.utils.JobConfigUtil;
  * @author Wangch
  *
  */
-public class UserLifeBinJiangMain {
+public class UserLifeBinJiangMain extends SuperMRJob {
 	private static Logger logout = LoggerFactory.getLogger(UserLifeBinJiangMain.class);
 
 	/**
@@ -48,6 +49,7 @@ public class UserLifeBinJiangMain {
 
 	public static final String BASE_PATH = "/user/zltel/";
 	public static final String GISPATH = BASE_PATH + "userlife/res/gis.txt";
+	public static final String IMEI_PATH = BASE_PATH + "userlife/res/imei.txt";
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 	private static final String hdfs = "hdfs://nn1:9000";
@@ -155,10 +157,10 @@ public class UserLifeBinJiangMain {
 				fs.delete(pout, true);
 				logout.info(outPath + "  this path exists, deleting......");
 			}
-			if (fs.exists(new Path(GISPATH))) {
-				logout.info("userlife res:" + GISPATH + "  exists");
+			if (fs.exists(new Path(GISPATH)) && fs.exists(new Path(IMEI_PATH))) {
+				logout.info("userlife res:<" + GISPATH + "> and <" + IMEI_PATH + ">  exists");
 			} else {
-				String m = "userlife res:" + GISPATH + "  does not exists !";
+				String m = "userlife res:" + GISPATH + "or " + IMEI_PATH + " does not exists !";
 				logout.error(m);
 				throw new RuntimeException(m);
 			}
@@ -230,7 +232,8 @@ public class UserLifeBinJiangMain {
 			// 设置输出结果
 			FileOutputFormat.setOutputPath(job, new Path(outPath));
 
-			job.setNumReduceTasks(30);
+			// job.setNumReduceTasks(70);
+			setReduceCount(job);
 
 			job.waitForCompletion(true);
 			logout.info("UserLife Complete ");

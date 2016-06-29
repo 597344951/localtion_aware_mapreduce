@@ -64,17 +64,17 @@ public class DateCollection implements Runnable {
 				Calendar c = Calendar.getInstance();
 				c.setTime(new Date(olt));
 				int h = c.get(Calendar.HOUR_OF_DAY);
-				log.info("data collection start ， data ：" + dated + "hour" + h);
+				System.out.println("data collection start ， data ：" + dated + "hour" + h);
 				olt += 60 * 60 * 1000;
 				if ("1".equals(jobtype) || "3".equals(jobtype)) {
-					log.info("gn coll start");
+					System.out.println("gn coll start");
 					MainJob.threadLeftOp("+");
 					GnTask gn = new GnTask(dated, h, isFtpWk, "msg");
 					Thread gnThred = new Thread(gn);
 					gnThred.start();
 				}
 				if ("2".equals(jobtype) || "3".equals(jobtype)) {
-					log.info("cs coll start");
+					System.out.println("cs coll start");
 					MainJob.threadLeftOp("+");
 					CsTasek cs = new CsTasek(dated, h, isFtpWk, "msg");
 					Thread gnThred = new Thread(cs);
@@ -89,24 +89,24 @@ public class DateCollection implements Runnable {
 						+ String.format("%02d", h);
 				for (int i = 0; i < 60; i++) {
 					if (MainJob.getThreadLeft() == 0) {
-						log.info("时间：" + dated + "小时：" + h + "gn or cs 线程结束");
+						System.out.println("时间：" + dated + "小时：" + h + "gn or cs 线程结束");
 						if ("4".equals(jobtype) || "3".equals(jobtype)) {
-							log.info("sy start");
+							System.out.println("sy start");
 							MainJob.threadLeftOp("+");
 							HfsyTask sy = new HfsyTask(hfOutGNPath,
 									hfdataOutCS, dated, h, isFtpWk);
 							Thread syThred = new Thread(sy);
 							syThred.start();
 						}
-						// if ("5".equals(jobtype) || "3".equals(jobtype)) {
-						// log.info("rl start");
-						// threadLeftOp("+");
-						// HfrlTasek rl = new HfrlTasek(hfOutGNPath,
-						// hfdataOutCS, dated, h,
-						// isFtpWk);
-						// Thread rlThred = new Thread(rl);
-						// rlThred.start();
-						// }
+						 if ("5".equals(jobtype) || "3".equals(jobtype)) {
+							 System.out.println("rl start");
+							 MainJob.threadLeftOp("+");
+							 HfrlTasek rl = new HfrlTasek(hfOutGNPath,
+							 hfdataOutCS, dated, h,
+							 isFtpWk);
+							Thread rlThred = new Thread(rl);
+							 rlThred.start();
+						 }
 						break;
 					} else {
 						Thread.sleep(60 * 1000);
@@ -115,7 +115,7 @@ public class DateCollection implements Runnable {
 				}
 				for (int i = 0; i < 60; i++) {
 					if (MainJob.getThreadLeft() == 0) {
-						log.info("时间：" + dated + "小时：" + h + "全部结束");
+						System.out.println("时间：" + dated + "小时：" + h + "全部结束");
 						break;
 					} else {
 						Thread.sleep(60 * 1000);

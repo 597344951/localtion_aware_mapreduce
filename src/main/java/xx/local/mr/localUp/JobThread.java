@@ -29,16 +29,15 @@ public class JobThread implements Runnable {
 			if (args.length > 2) {
 				isHdTask = args[1];
 				jobtype = args[2];
+
 			} else {
 				return;
 			}
-			// dated = null;
-
 			if ("1".equals(jobtype) || "3".equals(jobtype)) {
 
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 				SimpleDateFormat sdfh = new SimpleDateFormat("yyyyMMddHH");
-				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 4
+				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 6
 						* 60 * 60 * 1000;
 				String dated = sdf.format(new Date(nlt));
 
@@ -78,7 +77,7 @@ public class JobThread implements Runnable {
 			if ("2".equals(jobtype) || "3".equals(jobtype)) {
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 				SimpleDateFormat sdfh = new SimpleDateFormat("yyyyMMddHH");
-				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 4
+				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 6
 						* 60 * 60 * 1000;
 				String dated = sdf.format(new Date(nlt));
 				Calendar c = Calendar.getInstance();
@@ -117,7 +116,7 @@ public class JobThread implements Runnable {
 			if ("4".equals(jobtype) || "3".equals(jobtype)) {
 				SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 				SimpleDateFormat sdfh = new SimpleDateFormat("yyyyMMddHH");
-				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 4
+				long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 6
 						* 60 * 60 * 1000;
 				String dated = sdf.format(new Date(nlt));
 				Calendar c = Calendar.getInstance();
@@ -130,10 +129,26 @@ public class JobThread implements Runnable {
 				Thread syThred = new Thread(sy);
 				syThred.start();
 			}
+			// if ("5".equals(jobtype) || "3".equals(jobtype)) {
+			// SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+			// SimpleDateFormat sdfh = new SimpleDateFormat("yyyyMMddHH");
+			// long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 4
+			// * 60 * 60 * 1000;
+			// String dated = sdf.format(new Date(nlt));
+			// Calendar c = Calendar.getInstance();
+			// c.setTime(new Date(nlt));
+			// int h = c.get(Calendar.HOUR_OF_DAY);
+			// System.out.println("RL_" + dated.replaceAll("-", "") + "_" + h
+			// + "开始");
+			// MainJob.threadLeftOp("+");
+			// RlTasek rl = new RlTasek(dated, h, isHdTask);
+			// Thread rlThred = new Thread(rl);
+			// rlThred.start();
+			// }
 
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			SimpleDateFormat sdfh = new SimpleDateFormat("yyyyMMddHH");
-			long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 4 * 60
+			long nlt = sdfh.parse(sdfh.format(new Date())).getTime() - 6 * 60
 					* 60 * 1000;
 			String alldata = sdf.format(new Date(nlt));
 			Calendar c = Calendar.getInstance();
@@ -155,6 +170,8 @@ public class JobThread implements Runnable {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+		} finally {
+			System.out.println("job all over");
 		}
 
 	}

@@ -4,23 +4,33 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
+import com.zltel.common.utils.conf.ConfigUtil;
 import com.zltel.dbscan.bean.Point;
 import com.zltel.dbscan.utils.Utility;
 import com.zltel.location_aware.userlife.bean.Pointer;
 
 public class Dbscan {
+	private static final Map<String, String> _map = ConfigUtil.resolveConfigProFile("userlife.properties");
 
 	private List<Point> pointsList = new ArrayList<Point>();// 存储所有点的集合
 
 	private List<List<Point>> resultList = new ArrayList<List<Point>>();// 存储DBSCAN算法返回的结果集
 	/** 聚合半径 大小 **/
-	private int e = 200;// e半径
+	private int e = 500;// e半径
 	/** 集合最少包含点数 **/
 	private int minp = 5;// 密度阈值
 
 	public static final Dbscan getInstince() {
-		return new Dbscan();
+		String radius = ConfigUtil.getConfigValue(_map, "dbscan.radius", "500");
+		String minpt = ConfigUtil.getConfigValue(_map, "dbscan.minpoint", "10");
+
+		Dbscan dbs = new Dbscan();
+		dbs.e = Integer.valueOf(radius);
+		dbs.minp = Integer.valueOf(minpt);
+
+		return dbs;
 	}
 
 	/**
@@ -109,10 +119,7 @@ public class Dbscan {
 	 * 
 	 */
 	public static void main(String[] args) {
-		// getResult();
-		// display();
-		// System.out.println(Utility.getDistance(new Point(0,0), new
-		// Point(0,2)));
+		Dbscan db = Dbscan.getInstince();
 
 	}
 

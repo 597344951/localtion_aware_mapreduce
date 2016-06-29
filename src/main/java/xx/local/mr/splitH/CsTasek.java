@@ -171,7 +171,7 @@ public class CsTasek implements Runnable {
 						null, msgPath + "/");
 				log.info("sed msg：" + msg);
 
-				fs.close();
+//				fs.close();
 			}
 			if ("4".equals(isFtpWk)) {
 				FtpUtil ftp = new FtpUtil();
@@ -191,6 +191,7 @@ public class CsTasek implements Runnable {
 			e.printStackTrace();
 		} finally {
 			MainJob.threadLeftOp("-");
+			System.out.println("cs over");
 		}
 	}
 

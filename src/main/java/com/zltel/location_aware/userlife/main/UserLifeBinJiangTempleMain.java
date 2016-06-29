@@ -23,7 +23,7 @@ import com.zltel.location_aware.userlife.reduce.UserLifeBinJiangTempReduce;
 import com.zltel.location_aware.userlife.utils.JobConfigUtil;
 
 /**
- * 用户 标签 实现，滨江移动杭州分公司
+ * 用户 标签 导出 临时数据功能
  * 
  * @author Wangch
  *
@@ -52,12 +52,17 @@ public class UserLifeBinJiangTempleMain {
 	 *            1. starttime 2. endtime 3. 输出路径 ,4. cs输入路径,5.gn输入路径
 	 */
 	public static void main(String[] args) throws Exception {
-		logout.info("---------------- UserLife Tags Mark  ----------------");
+		logout.info("---------------- UserLife Tags Temp Data Create  ----------------");
 		logout.info("  version: BingJiang Hadoop ver");
 		logout.info("     time: 2016.5.19");
-		logout.info("---------------- UserLife Tags Mark  ----------------");
+		logout.info("---------------- UserLife Tags Temp Data Create  ----------------");
 
 		Configuration _conf = initConf();
+		_conf.set(UserLifeBinJiangMain.STR_STARTREGION, "00");
+		_conf.set(UserLifeBinJiangMain.STR_ENDREGION, "99");
+		_conf.set("KEEP_POINTS", "1");
+		_conf.set("POINTER_CALC_COUNT_LIMIT", String.valueOf(50000));
+
 		JobConfigUtil.initComConf(_conf);
 		Job job = Job.getInstance(_conf, "userlife tags ");
 		try {
@@ -140,7 +145,7 @@ public class UserLifeBinJiangTempleMain {
 			// 设置输出结果
 			FileOutputFormat.setOutputPath(job, new Path(outPath));
 
-			job.setNumReduceTasks(30);
+			job.setNumReduceTasks(70);
 
 			System.exit(job.waitForCompletion(true) ? 0 : 1);
 			logout.info("UserLife Complete ");

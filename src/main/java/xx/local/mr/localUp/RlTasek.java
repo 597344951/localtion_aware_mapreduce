@@ -149,7 +149,7 @@ public class RlTasek implements Runnable {
 							f.delete();
 						}
 
-						fs.close();
+//						fs.close();
 						file.delete();
 					}
 				}
