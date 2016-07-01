@@ -176,14 +176,14 @@ public class UserLifeBinJiangTempReduce extends Reducer<Text, Text, Text, Text> 
 		if (p == null) {
 			return;
 		}
-		points.add(p);
+		// points.add(p);
 		// 队列达到最大值时 合并
 		int ps = points.size();
 		// 添加超过 X个点 或者 处于临界状态
-		if (ps - lastcount > 6000 || ps >= MAX_POINT_COUNT) {
-			UserlifeService.mergePointers(points);
-			lastcount = points.size();
-		}
+		// if (ps - lastcount > 6000 || ps >= MAX_POINT_COUNT) {
+		UserlifeService.mergePointers(points, p);
+		lastcount = points.size();
+		// }
 	}
 
 	public Pointer check(Pointer pointer) throws ClassNotFoundException, SQLException {

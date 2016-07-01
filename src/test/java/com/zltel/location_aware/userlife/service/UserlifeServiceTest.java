@@ -97,7 +97,7 @@ public class UserlifeServiceTest {
 
 	public final void testanalyseHome() throws Exception {
 		testfilter();
-		List<TopPointer> topPointers = UserlifeService.analyseHome(pointers, 0);
+		List<TopPointer> topPointers = UserlifeService.analyseHome(pointers, 0, 0);
 		System.out.println("居住地列表");
 		for (int i = 0; i < topPointers.size(); i++) {
 			System.out.println(" 第 " + i + "个点: " + topPointers.get(i));
@@ -108,17 +108,17 @@ public class UserlifeServiceTest {
 	public final void testanalyseWork() throws Exception {
 		long start = System.currentTimeMillis();
 		testfilter();
-		List<TopPointer> topPointers = UserlifeService.analyseWork(pointers, 0);
+		List<TopPointer> topPointers = UserlifeService.analyseWork(pointers, 0, 0);
 		System.out.println("工作地列表");
 		for (int i = 0; i < topPointers.size(); i++) {
 			System.out.println(" 第 " + i + "个点: " + topPointers.get(i));
 		}
-		List<TopPointer> home = UserlifeService.analyseHome(pointers, 0);
+		List<TopPointer> home = UserlifeService.analyseHome(pointers, 0, 0);
 		System.out.println("居住地列表");
 		for (int i = 0; i < home.size(); i++) {
 			System.out.println(" 第 " + i + "个点: " + home.get(i));
 		}
-		List<TopPointer> fun = UserlifeService.analyseFun(pointers, 0);
+		List<TopPointer> fun = UserlifeService.analyseFun(pointers, 0, 0);
 		System.out.println("娱乐地地列表");
 		for (int i = 0; i < fun.size(); i++) {
 			System.out.println(" 第 " + i + "个点: " + fun.get(i));
@@ -129,8 +129,8 @@ public class UserlifeServiceTest {
 
 	public final void testCreatePut() throws Exception {
 		testfilter();
-		List<TopPointer> home = UserlifeService.analyseHome(pointers, 0);
-		List<TopPointer> work = UserlifeService.analyseWork(pointers, 0);
+		List<TopPointer> home = UserlifeService.analyseHome(pointers, 0, 0);
+		List<TopPointer> work = UserlifeService.analyseWork(pointers, 0, 0);
 
 		List<Put> homeputs = UserlifeService.createPuts("460000802503270", home, UserlifeService.TYPE_HOME, null, null);
 		List<Put> workputs = UserlifeService.createPuts("460000802503270", work, UserlifeService.TYPE_WORK, null, null);

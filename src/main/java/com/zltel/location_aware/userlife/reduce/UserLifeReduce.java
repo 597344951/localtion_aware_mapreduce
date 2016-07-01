@@ -97,7 +97,7 @@ public class UserLifeReduce extends TableReducer<Text, Text, ImmutableBytesWrita
 
 	private void analyseHome(String imsi, List<Pointer> pts,
 			Reducer<Text, Text, ImmutableBytesWritable, Mutation>.Context context) throws Exception {
-		List<TopPointer> tps = UserlifeService.analyseHome(pts, 0);
+		List<TopPointer> tps = UserlifeService.analyseHome(pts, 0, 0);
 		List<Put> puts = UserlifeService.createPuts(imsi, tps, UserlifeService.TYPE_HOME, week, month);
 		if (puts != null && !puts.isEmpty()) {
 			logout.info("获取到居住地点,IMSI:" + imsi + " ,size:" + puts.size());
@@ -111,7 +111,7 @@ public class UserLifeReduce extends TableReducer<Text, Text, ImmutableBytesWrita
 
 	private void analyseWork(String imsi, List<Pointer> pts,
 			Reducer<Text, Text, ImmutableBytesWritable, Mutation>.Context context) throws Exception {
-		List<TopPointer> tps = UserlifeService.analyseWork(pts, 0);
+		List<TopPointer> tps = UserlifeService.analyseWork(pts, 0, 0);
 		List<Put> puts = UserlifeService.createPuts(imsi, tps, UserlifeService.TYPE_WORK, week, month);
 		if (puts != null && !puts.isEmpty()) {
 			logout.info("获取到工作地点,IMSI:" + imsi + " ,size:" + puts.size());
@@ -125,7 +125,7 @@ public class UserLifeReduce extends TableReducer<Text, Text, ImmutableBytesWrita
 
 	private void analyseFun(String imsi, List<Pointer> pts,
 			Reducer<Text, Text, ImmutableBytesWritable, Mutation>.Context context) throws Exception {
-		List<TopPointer> tps = UserlifeService.analyseFun(pts, 0);
+		List<TopPointer> tps = UserlifeService.analyseFun(pts, 0, 0);
 		List<Put> puts = UserlifeService.createPuts(imsi, tps, UserlifeService.TYPE_FUN, week, month);
 		if (puts != null && !puts.isEmpty()) {
 			logout.info("获取到娱乐地点,IMSI:" + imsi + " ,size:" + puts.size());

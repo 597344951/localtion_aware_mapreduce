@@ -180,6 +180,8 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 		boolean jump = false;
 		long jumpCount = 0;
 		long totalCount = 0;
+
+		long _time = System.currentTimeMillis();
 		for (Text value : iterator) {
 			try {
 				String json = value.toString();
@@ -208,6 +210,8 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 				logout.error(e.getMessage(), e);
 			}
 		}
+		// 合并 数据 时间
+		_time = System.currentTimeMillis() - _time;
 		try {
 			if (!_points.isEmpty()) {
 				int sz = _points.size();
@@ -220,15 +224,15 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 				totalCount = pts.size();// 更改为合并后的点数目
 				logout.info(imsi + "  聚合+过滤后的点：" + pts.size());
 				String _k = imsi + "_" + UserlifeService.TYPE_HOME;
-				List<TopPointer> home_tps = UserlifeService.analyseHome(pts, totalCount);
+				List<TopPointer> home_tps = UserlifeService.analyseHome(pts, totalCount, _time);
 				context.write(new Text(_k), new Text(JSON.toJSONString(home_tps)));
 				context.progress();
 				_k = imsi + "_" + UserlifeService.TYPE_WORK;
-				List<TopPointer> work_tps = UserlifeService.analyseWork(pts, totalCount);
+				List<TopPointer> work_tps = UserlifeService.analyseWork(pts, totalCount, _time);
 				context.write(new Text(_k), new Text(JSON.toJSONString(work_tps)));
 				context.progress();
 				_k = imsi + "_" + UserlifeService.TYPE_FUN;
-				List<TopPointer> fun_tps = UserlifeService.analyseFun(pts, totalCount);
+				List<TopPointer> fun_tps = UserlifeService.analyseFun(pts, totalCount, _time);
 				context.write(new Text(_k), new Text(JSON.toJSONString(fun_tps)));
 				context.progress();
 			}
@@ -248,22 +252,20 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	 *            当前点
 	 * @param points
 	 *            点 集合
-	 * @param lastcount
-	 *            上一次合并点数
 	 * @return 设置前一个点
 	 */
 	private void checkMerg(Pointer p, TreeSet<Pointer> points) {
 		if (p == null) {
 			return;
 		}
-		points.add(p);
+		// points.add(p);
 		// 队列达到最大值时 合并
-		int ps = points.size();
+		// int ps = points.size();
 		// 添加超过 X个点 或者 处于临界状态
-		if (ps - lastcount > 3000 || ps >= MAX_POINT_COUNT) {
-			UserlifeService.mergePointers(points);
-			lastcount = points.size();
-		}
+		// if (ps - lastcount > 3000 || ps >= MAX_POINT_COUNT) {
+		UserlifeService.mergePointers(points, p);
+		lastcount = points.size();
+		// }
 	}
 
 	public Pointer check(Pointer pointer) throws ClassNotFoundException, SQLException {
@@ -288,20 +290,31 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	 * @throws IOException
 	 */
 	public void writeMsg(String msg, Reducer<Text, Text, Text, Text>.Context context) throws IOException {
-		FileSystem fs = FileSystem.get(URI.create(OUT_FILE_PATH), context.getConfiguration());
-		OutputStream out = fs.append(new Path(OUT_FILE_PATH));
 		try {
-			if (out != null) {
-				out.write(msg.getBytes());
-				out.flush();
+			FileSystem fs = FileSystem.get(URI.create(OUT_FILE_PATH), context.getConfiguration());
+			Path op = new Path(OUT_FILE_PATH);
+			OutputStream out = null;
+			if (fs.exists(op)) {
+				out = fs.append(op);
+			} else {
+				// 创建文件
+				out = fs.create(op);
 			}
-		} finally {
 			try {
-				out.close();
-			} catch (Exception e) {
-				logout.error("", e);
+				if (out != null) {
+					out.write(msg.concat("  \r\n").getBytes());
+					out.flush();
+				}
+			} finally {
+				try {
+					if (out != null)
+						out.close();
+				} catch (Exception e) {
+					logout.error("", e);
+				}
 			}
+		} catch (Exception e) {
+			logout.error("", e);
 		}
 	}
-
 }

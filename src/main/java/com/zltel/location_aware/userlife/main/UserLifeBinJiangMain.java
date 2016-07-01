@@ -129,6 +129,7 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 	}
 
 	public static final void run(String[] args, String[] splits) throws Exception {
+		long _time = System.currentTimeMillis();
 		Configuration _conf = initConf();
 		_conf.set(STR_STARTREGION, splits[0]);
 		_conf.set(STR_ENDREGION, splits[1]);
@@ -236,7 +237,8 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 			setReduceCount(job);
 
 			job.waitForCompletion(true);
-			logout.info("UserLife Complete ");
+			_time = System.currentTimeMillis() - _time;
+			logout.info("UserLife Complete ,cost time: " + _time / 60000 + " min");
 		} finally {
 
 		}

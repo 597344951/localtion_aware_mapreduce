@@ -346,6 +346,9 @@ public class Pointer {
 	 */
 	public final void _stime(Date _stime) {
 		this._stime = _stime;
+		if (null != _stime) {
+			this.stime = UserlifeService.sdf.format(_stime);
+		}
 	}
 
 	/**
@@ -354,6 +357,9 @@ public class Pointer {
 	 */
 	public final void _etime(Date _etime) {
 		this._etime = _etime;
+		if (null != _etime) {
+			this.etime = UserlifeService.sdf.format(_etime);
+		}
 	}
 
 	/**
@@ -376,6 +382,7 @@ public class Pointer {
 	 */
 	public final void set_lat(float _lat) {
 		this._lat = _lat;
+		this.lat = String.valueOf(_lat);
 	}
 
 	/**
@@ -384,6 +391,7 @@ public class Pointer {
 	 */
 	public final void set_lng(float _lng) {
 		this._lng = _lng;
+		this.lng = String.valueOf(_lng);
 	}
 
 	/**

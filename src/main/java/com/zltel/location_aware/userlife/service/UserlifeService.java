@@ -178,33 +178,79 @@ public class UserlifeService {
 	}
 
 	/**
-	 * 合并点,并移除 合并掉的点
+	 * 合并点 重新设计合并规则,在有序列表中，新增点 连续判断是否能被合并，能则更改合并数据，否则加入队列
 	 * 
 	 * @param pointers
 	 * @return
 	 */
-	public static void mergePointers(TreeSet<Pointer> pointers) {
-		List<Pointer> rvlist = new ArrayList<Pointer>();
-		Pointer bp = null;
-		for (Pointer p : pointers) {
-			if (bp != null) {
-				if (isSame(bp, p)) {
-					// bp.setEtime(p.getEtime());
-					bp.setStime(bp._stime().getTime() > p._stime().getTime() ? p.getStime() : bp.getStime());
-					bp.setEtime(bp._etime().getTime() > p._etime().getTime() ? bp.getEtime() : p.getEtime());
-					bp.setGroupCount(bp.getGroupCount() + 1);
-					rvlist.add(p);
-				} else {
-					bp = p;
+	public static void mergePointers(TreeSet<Pointer> pointers, Pointer _pointer) {
+		boolean merg = false;
+		for (Pointer _p : pointers) {
+			// 开始时间 和 结束时间 相差小于合并间隔
+			if (related(_p, _pointer)) {
+				if (isSame(_p, _pointer)) {
+					// 开始时间取 小的一个
+					_p._stime(new Date(Math.min(_p._stime().getTime(), _p._stime().getTime())));
+					// 结束时间取 大的一个
+					_p._etime(new Date(Math.max(_p._etime().getTime(), _p._etime().getTime())));
+
+					_p.setGroupCount(_p.getGroupCount() + 1);
+					merg = true;
+				}
+
+			} else {
+				continue;
+			}
+
+		}
+		// 没有合并， 添加入队列
+		if (!merg) {
+			pointers.add(_pointer);
+		}
+	}
+
+	public static void mergePointers(List<Pointer> pointers, Pointer _pointer) {
+		sortPointers(pointers);
+		boolean merg = false;
+		// 使用 折半查找 提高性能
+
+		int start = 0;
+		int end = pointers.size();
+
+		for (int idx = start; idx < end; idx++) {
+			Pointer _p = pointers.get(idx);
+			// 开始时间 和 结束时间 相差小于合并间隔
+			if (related(_p, _pointer)) {
+				if (isSame(_p, _pointer)) {
+					// 开始时间取 小的一个
+					_p._stime(new Date(Math.min(_p._stime().getTime(), _p._stime().getTime())));
+					// 结束时间取 大的一个
+					_p._etime(new Date(Math.max(_p._etime().getTime(), _p._etime().getTime())));
+
+					_p.setGroupCount(_p.getGroupCount() + 1);
+					merg = true;
 				}
 			} else {
-				bp = p;
+				continue;
 			}
 		}
-		for (Pointer p : rvlist) {
-			pointers.remove(p);
+		// 没有合并， 添加入队列
+		if (!merg) {
+			pointers.add(_pointer);
 		}
+	}
 
+	/**
+	 * 两个点 是否相关, 如果 开始时间-结束时间 的绝对值小于 合并间隔，则认为有关
+	 * 
+	 * @param p1
+	 * @param p2
+	 * @return
+	 */
+	public static boolean related(Pointer p1, Pointer p2) {
+		boolean ret = Math.abs(p1._stime().getTime() - p2._etime().getTime()) <= MERGETIME
+				|| Math.abs(p1._etime().getTime() - p2._stime().getTime()) <= MERGETIME;
+		return ret;
 	}
 
 	/**
@@ -239,7 +285,7 @@ public class UserlifeService {
 					merg = true;
 				}
 			}
-			if (merg && (Math.abs(p2._stime().getTime() - p1._etime().getTime()) <= MERGETIME)) {
+			if (merg && related(p1, p2)) {
 				return true;
 			}
 		}
@@ -333,7 +379,7 @@ public class UserlifeService {
 	 * @param pointers
 	 * @throws Exception
 	 */
-	public static List<TopPointer> analyseHome(List<Pointer> pointers, long totalCount) throws Exception {
+	public static List<TopPointer> analyseHome(List<Pointer> pointers, long totalCount, long _time) throws Exception {
 		// 去除, "MR", "DE"
 		String[] tags = { "NS-2", "NS-1", "BT" };
 		List<Pointer> ps = new ArrayList<Pointer>();
@@ -346,7 +392,7 @@ public class UserlifeService {
 			}
 		}
 		logout.info("过滤全部 居住地点 的点: " + ps.size());
-		return preanalyse(ps, totalCount);
+		return preanalyse(ps, totalCount, _time);
 	}
 
 	/**
@@ -355,7 +401,7 @@ public class UserlifeService {
 	 * @param pointers
 	 * @throws Exception
 	 */
-	public static List<TopPointer> analyseWork(List<Pointer> pointers, long totalCount) throws Exception {
+	public static List<TopPointer> analyseWork(List<Pointer> pointers, long totalCount, long _time) throws Exception {
 		// , "NL", "ER", "DE"
 		String[] tags = { "MW", "AW" };
 		List<Pointer> ps = new ArrayList<Pointer>();
@@ -369,7 +415,7 @@ public class UserlifeService {
 			}
 		}
 		logout.info("过滤全部 工作地点 的点: " + ps.size());
-		return preanalyse(ps, totalCount);
+		return preanalyse(ps, totalCount, _time);
 	}
 
 	/**
@@ -379,7 +425,7 @@ public class UserlifeService {
 	 * @return
 	 * @throws Exception
 	 */
-	public static List<TopPointer> analyseFun(List<Pointer> pointers, long totalCount) throws Exception {
+	public static List<TopPointer> analyseFun(List<Pointer> pointers, long totalCount, long _time) throws Exception {
 		// , "NL", "ER", "DE"
 		String[] tags = { "MW", "AW" };
 		List<Pointer> ps = new ArrayList<Pointer>();
@@ -393,10 +439,10 @@ public class UserlifeService {
 			}
 		}
 		logout.info("过滤全部 工作地点 的点: " + ps.size());
-		return preanalyse(ps, totalCount);
+		return preanalyse(ps, totalCount, _time);
 	}
 
-	private static List<TopPointer> preanalyse(List<Pointer> ps, long totalCount) throws Exception {
+	private static List<TopPointer> preanalyse(List<Pointer> ps, long totalCount, long _time) throws Exception {
 		List<TopPointer> toppts = new ArrayList<TopPointer>();
 		long _timecost = System.currentTimeMillis();
 		List<List<Point>> points = Dbscan.getInstince().getResult(ps);
@@ -406,6 +452,9 @@ public class UserlifeService {
 			Map<String, Integer> _cm = new HashMap<String, Integer>();
 			Map<String, Long> _dsr = new TreeMap<String, Long>();// 每天分数分布
 			List<Pointer> _pers = new ArrayList<Pointer>();
+
+			Map<String, Long> _busMap = new HashMap<String, Long>();// 业务分布
+
 			// 分组
 			List<Point> _ps = points.get(gi);
 			if (_ps.isEmpty()) {
@@ -426,6 +475,13 @@ public class UserlifeService {
 					v++;
 				}
 				_cm.put(_per.getTag(), v);
+
+				Long v2 = _busMap.get(_per.getBusiness_type());
+				if (v2 == null) {
+					v2 = 0l;
+				}
+				v2 += score;
+				_busMap.put(_per.getBusiness_type(), v2);
 
 				String _ds = daysdf.format(_per._stime());
 				Long _v = _dsr.get(_ds);
@@ -452,8 +508,22 @@ public class UserlifeService {
 					Map<String, Object> _m = new HashMap<String, Object>();
 					_m.put("time", entry.getKey());
 					_m.put("score", entry.getValue());
+					_m.put("totalScore", totalScore);
 					_m.put("percent", entry.getValue() * 100 / totalScore);
 					_dp2.add(_m);
+				}
+			}
+
+			// _busMap
+			List<Map<String, Object>> _busL = new ArrayList<Map<String, Object>>();
+			if (totalScore > 0) {
+				for (Map.Entry<String, Long> entry : _busMap.entrySet()) {
+					Map<String, Object> _m = new HashMap<String, Object>();
+					_m.put("tag", entry.getKey());
+					_m.put("score", entry.getValue());
+					_m.put("totalScore", totalScore);
+					_m.put("percent", entry.getValue() * 100 / totalScore);
+					_busL.add(_m);
 				}
 			}
 
@@ -466,6 +536,8 @@ public class UserlifeService {
 			tp.setDistributionPoint(JSON.toJSONString(_dp));
 			tp.setDayScoreRank(JSON.toJSONString(_dp2));
 			tp.setDbc_time(_timecost);
+			tp.setMerg_time(_time);
+			tp.setBussRank(JSON.toJSONString(_busL));
 
 			// 根据比例，重新计算分数
 			filterDayScore(_dp2, _pers);
@@ -841,6 +913,7 @@ public class UserlifeService {
 			cds.add(new ColumnData("info", "distributionPoint", String.valueOf(tp.getDistributionPoint())));
 			cds.add(new ColumnData("info", "dayScoreRank", String.valueOf(tp.getDayScoreRank())));
 			cds.add(new ColumnData("info", "dbc_time", String.valueOf(tp.getDbc_time())));
+			cds.add(new ColumnData("info", "merg_time", String.valueOf(tp.getMerg_time())));
 
 			// imsi;
 			cds.add(new ColumnData("info", "imsi", String.valueOf(tp.getImsi())));
@@ -848,6 +921,8 @@ public class UserlifeService {
 			cds.add(new ColumnData("info", "imei", String.valueOf(tp.getImei())));
 			// phone_model;
 			cds.add(new ColumnData("info", "phone_model", String.valueOf(tp.getPhone_model())));
+			// bussRank
+			cds.add(new ColumnData("info", "bussRank", String.valueOf(tp.getBussRank())));
 
 			List<Pointer> _pts = tp.getPointers();
 			if (_pts != null && _pts.size() > 0) {

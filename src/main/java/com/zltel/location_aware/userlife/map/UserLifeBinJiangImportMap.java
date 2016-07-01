@@ -113,13 +113,17 @@ public class UserLifeBinJiangImportMap extends Mapper<LongWritable, Text, Immuta
 					tp.setDayScoreRank(jo.getString("dayScoreRank"));
 					// dbc_time
 					tp.setDbc_time(jo.getLongValue("dbc_time"));
-					//
+					// merg_time
+					tp.setMerg_time(jo.getLongValue("merg_time"));
+
 					// imsi;
 					tp.setImsi(jo.getString("imsi"));
 					// imei;
 					tp.setImei(jo.getString("imei"));
 					// phone_model;
 					tp.setPhone_model(jo.getString("phone_model"));
+					// bussRank
+					tp.setBussRank(jo.getString("bussRank"));
 
 					if (savePoints) {
 						JSONArray _ja = jo.getJSONArray("pointers");

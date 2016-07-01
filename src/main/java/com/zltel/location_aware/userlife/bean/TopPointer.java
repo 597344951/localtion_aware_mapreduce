@@ -33,6 +33,9 @@ public class TopPointer {
 	// -----DEBUG INFO-----
 	/** DBSCAN 算法耗时 **/
 	private long dbc_time;
+	/** 合并算法耗时 **/
+	private long merg_time;
+	// -----DEBUG INFO-----
 
 	// ----------2016.6.28------------
 	/** 相关小区聚合信息 **/
@@ -40,6 +43,8 @@ public class TopPointer {
 	private String imsi;
 	private String imei;
 	private String phone_model;
+	/** [{tag:,score:,percent:}] **/
+	private String bussRank;// 业务 分布状况
 
 	// -------------------------------------------------------------------------------------
 
@@ -62,6 +67,21 @@ public class TopPointer {
 	 */
 	public final String getLng() {
 		return lng;
+	}
+
+	/**
+	 * @return the merg_time
+	 */
+	public final long getMerg_time() {
+		return merg_time;
+	}
+
+	/**
+	 * @param merg_time
+	 *            the merg_time to set
+	 */
+	public final void setMerg_time(long merg_time) {
+		this.merg_time = merg_time;
 	}
 
 	/**
@@ -268,6 +288,21 @@ public class TopPointer {
 	 */
 	public final void setPhone_model(String phone_model) {
 		this.phone_model = phone_model;
+	}
+
+	/**
+	 * @return the bussRank
+	 */
+	public final String getBussRank() {
+		return bussRank;
+	}
+
+	/**
+	 * @param bussRank
+	 *            the bussRank to set
+	 */
+	public final void setBussRank(String bussRank) {
+		this.bussRank = bussRank;
 	}
 
 	/*
