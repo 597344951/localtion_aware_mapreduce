@@ -57,7 +57,7 @@
 		<asynchbase.version>1.4.1</asynchbase.version>
 		<jdk.version>1.7</jdk.version>
 		<!-- zltel 工具 -->
-		<zl_com.version> 0.0.3-RELEASE </zl_com.version>
+		<zl_com.version> 1.0.1-RELEASE </zl_com.version>
 	</properties>
 	<dependencies>
 		<!-- zltel 公共工具 -->
