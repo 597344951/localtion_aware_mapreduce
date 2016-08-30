@@ -8,9 +8,9 @@ public class JobConfigUtil {
 	/** Reduce失败百分比 **/
 	private static final int REDUCE_FAIL_PERCENT = 100;
 	/** 任务最大超时时间 **/
-	private static final Long TASK_TIMEOUT = 5 * 60 * 1000l;
+	private static final Long TASK_TIMEOUT = 15 * 60 * 1000l;
 
-	private static final int MEM_SIZE = 2048;
+	// private static final int MEM_SIZE = 2048;
 
 	/**
 	 * 设置任务 配置基础属性

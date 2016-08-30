@@ -16,10 +16,14 @@ public class TestDataSize {
 			map.put(StringUtil.toFix(i, 15), "123456789012345");
 			if (System.currentTimeMillis() - time > 10000) {
 				int p = (int) (i * 100 / max);
+				System.out.println("good ");
+				System.out.println("OK ");
+			
 				System.out.println("已完成: " + p + "%");
 				time = System.currentTimeMillis();
 			}
 		}
+
 		System.out.println("加载完成");
 
 		Thread.sleep(10000);

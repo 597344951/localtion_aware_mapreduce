@@ -1,6 +1,7 @@
 package com.zltel.location_aware.userlife.bean;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 聚合 点
@@ -13,16 +14,18 @@ public class TopPointer {
 	 * 分数
 	 */
 	private long score;
+	private float _lat;
+	private float _lng;
+
 	private String lat;
 	private String lng;
 
-	private float _lat;
-	private float _lng;
 	/*** 聚合点个数 */
 	private long pcount;
 	/** 总统计点数 **/
 	private long totalCount;
 	/*** 聚合的点 */
+
 	private List<Pointer> pointers;
 
 	/** 点分布范围 [{tag:,count:,percent:}] **/
@@ -46,6 +49,21 @@ public class TopPointer {
 	/** [{tag:,score:,percent:}] **/
 	private String bussRank;// 业务 分布状况
 
+	//
+	/** 使用率 top **/
+	private List<Map<String, Object>> appTop;
+	private List<Map<String, Object>> urlTop;
+	private List<Map<String, Object>> hostCount;
+
+	private String type;
+
+	// ------------------
+	private String x;
+	private String y;
+
+	private List<Map<String, String>> neighbors;
+	private String neighborTxt;
+
 	// -------------------------------------------------------------------------------------
 
 	/**
@@ -53,35 +71,6 @@ public class TopPointer {
 	 */
 	public final long getScore() {
 		return score;
-	}
-
-	/**
-	 * @return the lat
-	 */
-	public final String getLat() {
-		return lat;
-	}
-
-	/**
-	 * @return the lng
-	 */
-	public final String getLng() {
-		return lng;
-	}
-
-	/**
-	 * @return the merg_time
-	 */
-	public final long getMerg_time() {
-		return merg_time;
-	}
-
-	/**
-	 * @param merg_time
-	 *            the merg_time to set
-	 */
-	public final void setMerg_time(long merg_time) {
-		this.merg_time = merg_time;
 	}
 
 	/**
@@ -99,18 +88,35 @@ public class TopPointer {
 	}
 
 	/**
-	 * @return the pointers
+	 * @return the lat
 	 */
-	public final List<Pointer> getPointers() {
-		return pointers;
+	public final String getLat() {
+		return lat;
 	}
 
 	/**
-	 * @param score
-	 *            the score to set
+	 * @return the lng
 	 */
-	public final void setScore(long score) {
-		this.score = score;
+	public final String getLng() {
+		return lng;
+	}
+
+	/**
+	 * @param _lat
+	 *            the _lat to set
+	 */
+	public final void set_lat(float _lat) {
+		this._lat = _lat;
+		this.lat = String.valueOf(_lat);
+	}
+
+	/**
+	 * @param _lng
+	 *            the _lng to set
+	 */
+	public final void set_lng(float _lng) {
+		this._lng = _lng;
+		this.lng = String.valueOf(_lng);
 	}
 
 	/**
@@ -132,19 +138,78 @@ public class TopPointer {
 	}
 
 	/**
-	 * @param _lat
-	 *            the _lat to set
+	 * @return the appTop
 	 */
-	public final void set_lat(float _lat) {
-		this._lat = _lat;
+	public final List<Map<String, Object>> getAppTop() {
+		return appTop;
 	}
 
 	/**
-	 * @param _lng
-	 *            the _lng to set
+	 * @return the urlTop
 	 */
-	public final void set_lng(float _lng) {
-		this._lng = _lng;
+	public final List<Map<String, Object>> getUrlTop() {
+		return urlTop;
+	}
+
+	/**
+	 * @return the hostCount
+	 */
+	public final List<Map<String, Object>> getHostCount() {
+		return hostCount;
+	}
+
+	/**
+	 * @param appTop
+	 *            the appTop to set
+	 */
+	public final void setAppTop(List<Map<String, Object>> appTop) {
+		this.appTop = appTop;
+	}
+
+	/**
+	 * @param urlTop
+	 *            the urlTop to set
+	 */
+	public final void setUrlTop(List<Map<String, Object>> urlTop) {
+		this.urlTop = urlTop;
+	}
+
+	/**
+	 * @param hostCount
+	 *            the hostCount to set
+	 */
+	public final void setHostCount(List<Map<String, Object>> hostCount) {
+		this.hostCount = hostCount;
+	}
+
+	/**
+	 * @return the merg_time
+	 */
+	public final long getMerg_time() {
+		return merg_time;
+	}
+
+	/**
+	 * @param merg_time
+	 *            the merg_time to set
+	 */
+	public final void setMerg_time(long merg_time) {
+		this.merg_time = merg_time;
+	}
+
+	/**
+	 * @return the pointers
+	 */
+	public final List<Pointer> getPointers() {
+		return pointers;
+	}
+
+	/**
+	 * @param score
+	 *            the score to set
+	 */
+	public final void setScore(long score) {
+		this.score = score;
 	}
 
 	/**
@@ -303,6 +368,81 @@ public class TopPointer {
 	 */
 	public final void setBussRank(String bussRank) {
 		this.bussRank = bussRank;
+	}
+
+	/**
+	 * @return the type
+	 */
+	public final String getType() {
+		return type;
+	}
+
+	/**
+	 * @param type
+	 *            the type to set
+	 */
+	public final void setType(String type) {
+		this.type = type;
+	}
+
+	/**
+	 * @return the x
+	 */
+	public final String getX() {
+		return x;
+	}
+
+	/**
+	 * @return the y
+	 */
+	public final String getY() {
+		return y;
+	}
+
+	/**
+	 * @return the neighbors
+	 */
+	public final List<Map<String, String>> getNeighbors() {
+		return neighbors;
+	}
+
+	/**
+	 * @param x
+	 *            the x to set
+	 */
+	public final void setX(String x) {
+		this.x = x;
+	}
+
+	/**
+	 * @param y
+	 *            the y to set
+	 */
+	public final void setY(String y) {
+		this.y = y;
+	}
+
+	/**
+	 * @param neighbors
+	 *            the neighbors to set
+	 */
+	public final void setNeighbors(List<Map<String, String>> neighbors) {
+		this.neighbors = neighbors;
+	}
+
+	/**
+	 * @return the neighborTxt
+	 */
+	public final String getNeighborTxt() {
+		return neighborTxt;
+	}
+
+	/**
+	 * @param neighborTxt
+	 *            the neighborTxt to set
+	 */
+	public final void setNeighborTxt(String neighborTxt) {
+		this.neighborTxt = neighborTxt;
 	}
 
 	/*

@@ -9,6 +9,15 @@ import com.zltel.location_aware.userlife.bean.Pointer;
  *
  */
 public class LocalDistince {
+	public static int lng_start = 118;
+	public static int lng_end = 121;
+	public static int lat_start = 29;
+	public static int lat_end = 31;
+	/** 单位距离100m 的权重值 **/
+	public static int weight_100 = 1000;
+	/** 单位距离1000m 的权重值 **/
+	public static int weight_1000 = 100;
+
 	public static double Distince(Pointer p1, Pointer p2) {
 
 		return Distance(p1.get_lng(), p1.get_lat(), p2.get_lng(), p2.get_lat());
@@ -40,5 +49,31 @@ public class LocalDistince {
 		sb2 = Math.sin(b / 2.0);
 		d = 2 * R * Math.asin(Math.sqrt(sa2 * sa2 + Math.cos(lat1) * Math.cos(lat2) * sb2 * sb2));
 		return d;
+	}
+
+	public static int getIndex(double d, int step, int weight) {
+		int s = 0;
+		if (d > 100) {
+			// lon
+			s = lng_start;
+		} else {
+			// lat
+			s = lat_start;
+		}
+		s = 0;
+		int r = (int) (d * weight - s * weight);
+		int r1 = r / step;
+		int r2 = r % step;
+		return r1 + (r2 > 0 ? 1 : 0);
+	}
+
+	/** 0.001 单位100， **/
+	public static void main(String[] args) {
+		double distince = Distance(120.150, 30.240, 120.155, 30.245);
+		System.out.println(distince);
+
+		System.out.println(getIndex(lng_end, 10, 1000));
+		System.out.println(getIndex(lng_end, 1, 100));
+
 	}
 }

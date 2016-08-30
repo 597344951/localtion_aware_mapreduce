@@ -33,6 +33,8 @@ import com.zltel.location_aware.userlife.map.UserLifeBinJiangImportMap;
 public class UserLifeBinJiangImportMain {
 	private static Logger logout = LoggerFactory.getLogger(UserLifeBinJiangImportMain.class);
 	public static String writeTable = "userlife";
+	/**是否运行于调试模式**/
+	public static boolean RUN_DEBUG = false;
 
 	public static Configuration initConf() {
 		Configuration conf = new Configuration();
@@ -75,8 +77,8 @@ public class UserLifeBinJiangImportMain {
 			logout.info(" 输入 导入的月份数: " + args[4]);
 			_conf.set("SAVE_MONTH", String.valueOf(Integer.valueOf(args[4])));
 		}
-
-		checkTable(writeTable, _conf);
+		if (!RUN_DEBUG)
+			checkTable(writeTable, _conf);
 
 		_conf.set(TableOutputFormat.OUTPUT_TABLE, writeTable);
 		String Path = args[0];

@@ -42,28 +42,26 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	/** 上一次合并后的大小 **/
 	private long lastcount = 0;
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * 初始化加载 读取参数
 	 * 
-	 * @see
-	 * org.apache.hadoop.mapreduce.Reducer#setup(org.apache.hadoop.mapreduce.
-	 * Reducer.Context)
+	 * @param config
+	 * @throws IOException
 	 */
-	@Override
-	protected void setup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
-		String keep_points = context.getConfiguration().get("KEEP_POINTS");
-		if (StringUtil.isNotNullAndEmpty(keep_points)) {
-			UserlifeService.KEEP_POINTS = "0".equals(keep_points.trim()) ? false : true;
-		}
+	public void initParams(org.apache.hadoop.conf.Configuration config) throws IOException {
+		String gispath = config.get("GISPATH");
+		gispath = gispath == null ? UserLifeBinJiangMain.GISPATH : gispath;
+		String imei_path = config.get("IMEI_PATH");
+		imei_path = imei_path == null ? UserLifeBinJiangMain.IMEI_PATH : imei_path;
 
 		if (_cacheMap == null) {
 			_cacheMap = new HashMap<String, Map<String, Object>>();
 			// 读取 gis 数据
-			FileSystem fs = FileSystem.get(context.getConfiguration());
+			FileSystem fs = FileSystem.get(config);
 			FSDataInputStream in = null;
 			try {
 				// 输出全部文件内容
-				in = fs.open(new Path(UserLifeBinJiangMain.GISPATH));
+				in = fs.open(new Path(gispath));
 				// 用Hadoop的IOUtils工具方法来让这个文件的指定字节复制到标准输出流上
 				ByteArrayOutputStream bo = new ByteArrayOutputStream();
 				IOUtils.copyBytes(in, bo, 50, false);
@@ -106,11 +104,11 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 		if (_imeiMap == null) {
 			_imeiMap = new HashMap<String, Map<String, Object>>();
 			// 读取 gis 数据
-			FileSystem fs = FileSystem.get(context.getConfiguration());
+			FileSystem fs = FileSystem.get(config);
 			FSDataInputStream in = null;
 			try {
 				// 输出全部文件内容
-				in = fs.open(new Path(UserLifeBinJiangMain.IMEI_PATH));
+				in = fs.open(new Path(imei_path));
 				// 用Hadoop的IOUtils工具方法来让这个文件的指定字节复制到标准输出流上
 				ByteArrayOutputStream bo = new ByteArrayOutputStream();
 				IOUtils.copyBytes(in, bo, 50, false);
@@ -139,28 +137,35 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 			}
 		}
 
-		OUT_FILE_PATH = context.getConfiguration().get("result_out_path");
+		String keep_points = config.get("KEEP_POINTS");
+		if (StringUtil.isNotNullAndEmpty(keep_points)) {
+			UserlifeService.KEEP_POINTS = "0".equals(keep_points.trim()) ? false : true;
+		}
+
+		OUT_FILE_PATH = config.get("result_out_path");
 		OUT_FILE_PATH = OUT_FILE_PATH + "jobLog.txt";
 
-		String pcl = context.getConfiguration().get("POINTER_CALC_COUNT_LIMIT");
+		String pcl = config.get("POINTER_CALC_COUNT_LIMIT");
 		if (StringUtil.isNum(pcl)) {
 			int _pcl = Integer.valueOf(pcl);
 			if (_pcl > 10000) {
 				MAX_POINT_COUNT = _pcl;
 			}
 		}
+
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
 	 * @see
-	 * org.apache.hadoop.mapreduce.Reducer#cleanup(org.apache.hadoop.mapreduce.
+	 * org.apache.hadoop.mapreduce.Reducer#setup(org.apache.hadoop.mapreduce.
 	 * Reducer.Context)
 	 */
 	@Override
-	protected void cleanup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
-
+	protected void setup(Reducer<Text, Text, Text, Text>.Context context) throws IOException, InterruptedException {
+		org.apache.hadoop.conf.Configuration config = context.getConfiguration();
+		this.initParams(config);
 	}
 
 	/*
@@ -172,7 +177,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	@Override
 	protected void reduce(Text key, Iterable<Text> iterator, Reducer<Text, Text, Text, Text>.Context context)
 			throws IOException, InterruptedException {
-		logout.info("start reduce----------------------------------");
+		// logout.info("start reduce----------------------------------");
 
 		String _imsi = key.toString();
 		// List<Pointer> points = new ArrayList<Pointer>();
@@ -204,7 +209,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 						jumpCount++;
 					}
 				} else {
-					logout.info("没有识别到数据! " + json);
+					// logout.info("没有识别到数据! " + json);
 				}
 			} catch (Exception e) {
 				logout.error(e.getMessage(), e);
@@ -216,7 +221,7 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 			if (!_points.isEmpty()) {
 				int sz = _points.size();
 				if (jump) {
-					writeMsg(_imsi + " too big , count:" + (sz + jumpCount), context);
+					writeMsg(_imsi + " too big , count:" + (sz + jumpCount), context.getConfiguration());
 				}
 				String imsi = key.toString();
 				List<Pointer> points = new ArrayList<Pointer>(_points);
@@ -268,6 +273,14 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 		// }
 	}
 
+	/**
+	 * 校验 是否查找到 相关的 小区信息
+	 * 
+	 * @param pointer
+	 * @return
+	 * @throws ClassNotFoundException
+	 * @throws SQLException
+	 */
 	public Pointer check(Pointer pointer) throws ClassNotFoundException, SQLException {
 		Map<String, Object> map = _cacheMap.get(pointer.getCi().trim());
 		if (map != null) {
@@ -289,9 +302,9 @@ public class UserLifeBinJiangReduce extends Reducer<Text, Text, Text, Text> {
 	 * @param context
 	 * @throws IOException
 	 */
-	public void writeMsg(String msg, Reducer<Text, Text, Text, Text>.Context context) throws IOException {
+	public void writeMsg(String msg, org.apache.hadoop.conf.Configuration config) throws IOException {
 		try {
-			FileSystem fs = FileSystem.get(URI.create(OUT_FILE_PATH), context.getConfiguration());
+			FileSystem fs = FileSystem.get(URI.create(OUT_FILE_PATH), config);
 			Path op = new Path(OUT_FILE_PATH);
 			OutputStream out = null;
 			if (fs.exists(op)) {

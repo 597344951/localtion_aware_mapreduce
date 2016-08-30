@@ -38,19 +38,15 @@ public class UserLifeBinJiangMap extends Mapper<LongWritable, Text, Text, Text> 
 
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * 创建 Pointer
 	 * 
-	 * @see org.apache.hadoop.mapreduce.Mapper#map(java.lang.Object,
-	 * java.lang.Object, org.apache.hadoop.mapreduce.Mapper.Context)
+	 * @param _key
+	 * @param value
+	 * @param context
+	 * @return
 	 */
-	@Override
-	protected void map(LongWritable _key, Text value, Mapper<LongWritable, Text, Text, Text>.Context context)
-			throws IOException, InterruptedException {
-		// logout.info("start Map -----------------------------");
-
-		// stime,etime,ci,lac,imsi,source,nettype
-
+	public Pointer createPointer(Text value) {
 		String[] strs = value.toString().trim().split("\\t");
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
 		// SimpleDateFormat sdfd = new SimpleDateFormat("yyyyMMdd");
@@ -75,7 +71,7 @@ public class UserLifeBinJiangMap extends Mapper<LongWritable, Text, Text, Text> 
 
 			String[] ss = strs[0].trim().split("_");
 			if (ss.length != 2) {
-				return;
+				return null;
 			}
 			colum = (strs[1].trim() + "1").split("\\|");
 			if (colum.length >= 39) {
@@ -196,7 +192,7 @@ public class UserLifeBinJiangMap extends Mapper<LongWritable, Text, Text, Text> 
 
 			// 判断是否符合
 			if (!checkIMSI(imsi)) {
-				return;
+				return null;
 			}
 
 			// 创建 pointer
@@ -225,17 +221,20 @@ public class UserLifeBinJiangMap extends Mapper<LongWritable, Text, Text, Text> 
 			if (StringUtil.isNotNullAndEmpty(lac)) {
 				point.setLac(lac);
 			}
-			if (point.avaliable() && point._stime() != null && point._etime() != null) {
-				String json = JSON.toJSONString(point);
-				context.write(new Text(imsi), new Text(json));
-				// logout.info("imsi:" + imsi + "\njson:" + json);
-			} else {
-				logout.warn(" 数据不完整! imsi:" + imsi + " 数据:" + point);
-			}
-		} else {
-			logout.warn(" 数据有误: " + value.toString());
+			return point;
 		}
+		return null;
+	}
 
+	protected void map(LongWritable _key, Text value, Mapper<LongWritable, Text, Text, Text>.Context context)
+			throws IOException, InterruptedException {
+		Pointer point = createPointer(value);
+
+		if (point != null && point.avaliable() && point._stime() != null && point._etime() != null) {
+			String json = JSON.toJSONString(point);
+			context.write(new Text(point.getImsi()), new Text(json));
+			// logout.info("imsi:" + imsi + "\njson:" + json);
+		}
 	}
 
 	/**

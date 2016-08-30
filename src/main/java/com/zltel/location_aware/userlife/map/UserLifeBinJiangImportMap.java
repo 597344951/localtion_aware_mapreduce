@@ -23,7 +23,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.zltel.common.utils.string.StringUtil;
 import com.zltel.common.utils.time.DateTimeUtil;
 import com.zltel.location_aware.userlife.bean.CiCountInfo;
-import com.zltel.location_aware.userlife.bean.Pointer;
 import com.zltel.location_aware.userlife.bean.TopPointer;
 import com.zltel.location_aware.userlife.service.UserlifeService;
 
@@ -92,68 +91,16 @@ public class UserLifeBinJiangImportMap extends Mapper<LongWritable, Text, Immuta
 				// context.progress();
 				for (int i = 0; i < ja.size() && i < 5; i++) {
 					JSONObject jo = ja.getJSONObject(i);
-					TopPointer tp = new TopPointer();
+
 					String _lat = jo.getString("lat");
 					String _lng = jo.getString("lng");
 					if (StringUtil.isNullOrEmpty(_lat, _lng)) {
 						logout.warn("数据不全，跳过:" + jo.toJSONString());
 						continue;
 					}
-					tp.setLat(_lat);
-					tp.setLng(_lng);
-					tp.setScore(jo.getLongValue("score"));
-
-					// pcount
-					tp.setPcount(jo.getLongValue("pcount"));
-					// totalCount
-					tp.setTotalCount(jo.getLongValue("totalCount"));
-					// distributionPoint
-					tp.setDistributionPoint(jo.getString("distributionPoint"));
-					// dayScoreRank
-					tp.setDayScoreRank(jo.getString("dayScoreRank"));
-					// dbc_time
-					tp.setDbc_time(jo.getLongValue("dbc_time"));
-					// merg_time
-					tp.setMerg_time(jo.getLongValue("merg_time"));
-
-					// imsi;
-					tp.setImsi(jo.getString("imsi"));
-					// imei;
-					tp.setImei(jo.getString("imei"));
-					// phone_model;
-					tp.setPhone_model(jo.getString("phone_model"));
-					// bussRank
-					tp.setBussRank(jo.getString("bussRank"));
-
-					if (savePoints) {
-						JSONArray _ja = jo.getJSONArray("pointers");
-						if (_ja != null) {
-							List<Pointer> pters = new ArrayList<Pointer>();
-							for (int _i = 0; _i < _ja.size(); _i++) {
-								Pointer pter = JSON.toJavaObject(_ja.getJSONObject(_i), Pointer.class);
-								pters.add(pter);
-							}
-							// context.progress();
-							if (pters.size() > UserlifeService.MAX_POINTER_COUNT) {
-								logout.info("点数超过了最大门限值,合并并截取最大的前 " + UserlifeService.MAX_POINTER_COUNT + " 个");
-								pters = UserlifeService.sortAndSubLength(pters);
-							}
-							tp.setPointers(pters);
-						}
-					}
-					// ciCountInfos;
-					JSONArray _ja = jo.getJSONArray("ciCountInfos");
-					if (_ja != null) {
-						List<CiCountInfo> ciCountInfos = new ArrayList<CiCountInfo>();
-						for (int _i = 0; _i < _ja.size(); _i++) {
-							CiCountInfo pter = JSON.toJavaObject(_ja.getJSONObject(_i), CiCountInfo.class);
-							ciCountInfos.add(pter);
-						}
-						tp.setCiCountInfos(ciCountInfos);
-					}
-
+					TopPointer tp = JSON.toJavaObject(jo, TopPointer.class);
 					tps.add(tp);
-					// context.progress();
+					context.progress();
 				}
 				List<Put> puts = UserlifeService.createPuts(imsi, tps, Integer.valueOf(type), week, month);
 				if (puts != null && !puts.isEmpty()) {

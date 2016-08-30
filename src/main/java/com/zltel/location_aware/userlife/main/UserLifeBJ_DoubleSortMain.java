@@ -13,25 +13,31 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.TextInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.zltel.common.main.SuperMRJob;
 import com.zltel.common.utils.date.DateUtil;
 import com.zltel.common.utils.string.StringUtil;
-import com.zltel.location_aware.userlife.map.UserLifeBinJiangMap;
-import com.zltel.location_aware.userlife.reduce.UserLifeBinJiangReduce;
+import com.zltel.location_aware.userlife.doublesort.DoubleSortKey;
+import com.zltel.location_aware.userlife.doublesort.FirstPartitioner;
+import com.zltel.location_aware.userlife.doublesort.GroupingComparator;
+import com.zltel.location_aware.userlife.doublesort.MyComparator;
+import com.zltel.location_aware.userlife.map.UserLifeBJ_DoubleSort_Map;
+import com.zltel.location_aware.userlife.reduce.UserLifeBJ_DoubleSort_Reduce;
 import com.zltel.location_aware.userlife.utils.JobConfigUtil;
 
 /**
- * 用户 标签 实现，滨江移动杭州分公司
+ * 使用 双重排序 提高计算效率
  * 
  * @author Wangch
  *
  */
-public class UserLifeBinJiangMain extends SuperMRJob {
-	private static Logger logout = LoggerFactory.getLogger(UserLifeBinJiangMain.class);
+public class UserLifeBJ_DoubleSortMain extends SuperMRJob {
+	private static Logger logout = LoggerFactory.getLogger(UserLifeBJ_DoubleSortMain.class);
 
 	/**
 	 * 任务 分片数
@@ -48,8 +54,8 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 	public static final String STR_ENDREGION = "endregion";
 
 	public static String BASE_PATH = "/user/zltel/";
-	public static String GISPATH = "userlife/res/gis.txt";
-	public static String IMEI_PATH = "userlife/res/imei.txt";
+	public static final String _GISPATH = "userlife/res/gis.txt";
+	public static final String _IMEI_PATH = "userlife/res/imei.txt";
 
 	private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd");
 	private static final String hdfs = "hdfs://nn1:9000";
@@ -72,8 +78,8 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 	 */
 	public static void main(String[] args) throws Exception {
 		logout.info("---------------- UserLife Tags Mark  ----------------");
-		logout.info("  version: BingJiang Hadoop ver");
-		logout.info("     time: 2016.5.19");
+		logout.info("  version: 使用双重 排序提高计算效率");
+		logout.info("     time: 2016.7.6");
 		logout.info("---------------- UserLife Tags Mark  ----------------");
 		if (args.length >= 6) {
 			splitCount = Integer.valueOf(args[5]);
@@ -158,12 +164,12 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 				fs.delete(pout, true);
 				logout.info(outPath + "  this path exists, deleting......");
 			}
-			if (fs.exists(new Path(BASE_PATH + GISPATH)) && fs.exists(new Path(BASE_PATH + IMEI_PATH))) {
-				logout.info("userlife res:<" + BASE_PATH + GISPATH + "> and <" + BASE_PATH + IMEI_PATH + ">  exists");
-				job.getConfiguration().set("GISPATH", BASE_PATH + GISPATH);
-				job.getConfiguration().set("IMEI_PATH", BASE_PATH + IMEI_PATH);
+			if (fs.exists(new Path(BASE_PATH + _GISPATH)) && fs.exists(new Path(BASE_PATH + _IMEI_PATH))) {
+				logout.info("userlife res:<" + BASE_PATH + _GISPATH + "> and <" + BASE_PATH + _IMEI_PATH + ">  exists");
+				job.getConfiguration().set("GISPATH", BASE_PATH + _GISPATH);
+				job.getConfiguration().set("IMEI_PATH", BASE_PATH + _IMEI_PATH);
 			} else {
-				String m = "userlife res:" + BASE_PATH + GISPATH + " or " + BASE_PATH + IMEI_PATH
+				String m = "userlife res:" + BASE_PATH + _GISPATH + " or " + BASE_PATH + _IMEI_PATH
 						+ " does not exists !";
 				logout.error(m);
 				throw new RuntimeException(m);
@@ -221,15 +227,29 @@ public class UserLifeBinJiangMain extends SuperMRJob {
 				}
 			}
 
-			job.setJarByClass(UserLifeBinJiangMain.class);
+			job.setJarByClass(UserLifeBJ_DoubleSortMain.class);
 			// 设置Map/Reduce 处理类
-			job.setMapperClass(UserLifeBinJiangMap.class);
-			job.setReducerClass(UserLifeBinJiangReduce.class);
-			// 设置Map/Reduce 中间结果指
-			job.setMapOutputKeyClass(Text.class);
+			job.setMapperClass(UserLifeBJ_DoubleSort_Map.class);
+			job.setReducerClass(UserLifeBJ_DoubleSort_Reduce.class);
+			// 分区函数
+			job.setPartitionerClass(FirstPartitioner.class);
+			// 分组函数( 根据此 方法确定 相同的 key进行 value分组)
+			job.setGroupingComparatorClass(GroupingComparator.class);
+			// 设定自定义排序函数
+			job.setSortComparatorClass(MyComparator.class);
+
+			// map 输出Key的类型
+			job.setMapOutputKeyClass(DoubleSortKey.class);
+			// map输出Value的类型
 			job.setMapOutputValueClass(Text.class);
+			// rduce输出Key的类型，是Text，因为使用的OutputFormatClass是TextOutputFormat
 			job.setOutputKeyClass(Text.class);
+			// rduce输出Value的类型
 			job.setOutputValueClass(Text.class);
+			// 将输入的数据集分割成小数据块splites，同时提供一个RecordReder的实现。
+			job.setInputFormatClass(TextInputFormat.class);
+			// 提供一个RecordWriter的实现，负责数据输出。
+			job.setOutputFormatClass(TextOutputFormat.class);
 
 			// 设置保存结果压缩
 			FileOutputFormat.setCompressOutput(job, true);

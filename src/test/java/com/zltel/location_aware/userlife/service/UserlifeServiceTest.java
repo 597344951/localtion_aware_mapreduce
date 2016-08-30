@@ -78,11 +78,14 @@ public class UserlifeServiceTest {
 	public void tearDown() throws Exception {
 	}
 
+	@Test
 	public final void testMergePointers() {
+		System.out.println(" 测试 自定义合并  ");
 		UserlifeService.sortPointers(pointers);
-		List<Pointer> nl = UserlifeService.mergePointers(pointers);
-		System.out.println("合并前： " + pointers.size() + "\t 合并后:" + nl.size());
-		pointers = nl;
+		List<Pointer> list = new ArrayList<Pointer>();
+		for (Pointer pt : pointers) {
+			UserlifeService.mergePointers(list, pt);
+		}
 	}
 
 	public final void testfilter() {
@@ -127,6 +130,7 @@ public class UserlifeServiceTest {
 		System.out.println("总耗时:" + start);
 	}
 
+	@Test
 	public final void testCreatePut() throws Exception {
 		testfilter();
 		List<TopPointer> home = UserlifeService.analyseHome(pointers, 0, 0);
@@ -149,8 +153,13 @@ public class UserlifeServiceTest {
 		_ps.add(new Point(p));
 		ps.add(p);
 		tp.setPointers(ps);
-		UserlifeService.CountPointersInfo(tp, _ps);
+		UserlifeService.CountPointersInfo(tp);
 		System.out.println(tp);
+	}
+
+	public static void main(String[] args) {
+		Object i = 0;
+		System.out.println(i instanceof Integer);
 	}
 
 }
